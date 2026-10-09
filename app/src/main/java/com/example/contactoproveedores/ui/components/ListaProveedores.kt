@@ -1,14 +1,20 @@
 package com.example.contactoproveedores.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.contactoproveedores.R
@@ -16,6 +22,8 @@ import com.example.contactoproveedores.domain.Proveedor
 
 @Composable
 fun TarjetaProveedor(p: Proveedor, ocupado: Boolean, eliminar: () -> Unit) {
+    var expandido by rememberSaveable(p.id) { mutableStateOf(false) }
+    val giro by animateFloatAsState(if (expandido) 180f else 0f, label = "Flecha del detalle")
     OutlinedCard(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)) {
@@ -36,14 +44,32 @@ fun TarjetaProveedor(p: Proveedor, ocupado: Boolean, eliminar: () -> Unit) {
                             MaterialTheme.colorScheme.onSurface.copy(alpha = .38f) else MaterialTheme.colorScheme.error)
                 }
             }
-            Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(30.dp)) {
-                Text(p.rubro, Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
-                    style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Surface(modifier = Modifier.weight(1f, fill = false),
+                    color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(30.dp)) {
+                    Text(p.rubro, Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                        style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                }
+                Spacer(Modifier.weight(1f))
+                TextButton(onClick = { expandido = !expandido },
+                    modifier = Modifier.heightIn(min = 48.dp).semantics {
+                        stateDescription = if (expandido) "Expandido" else "Contraído"
+                    }) {
+                    Text(if (expandido) "Ocultar detalle" else "Ver detalle")
+                    Spacer(Modifier.width(6.dp))
+                    Icon(painterResource(R.drawable.ic_expand), contentDescription = null,
+                        modifier = Modifier.size(18.dp).rotate(giro))
+                }
             }
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            DatoContacto(R.drawable.ic_phone, "Teléfono", p.telefono)
-            DatoContacto(R.drawable.ic_mail, "Correo electrónico", p.correo)
-            DatoContacto(R.drawable.ic_location, "Dirección", p.direccion)
+            AnimatedVisibility(visible = expandido) {
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    DatoContacto(R.drawable.ic_phone, "Teléfono", p.telefono)
+                    DatoContacto(R.drawable.ic_mail, "Correo electrónico", p.correo)
+                    DatoContacto(R.drawable.ic_location, "Dirección", p.direccion)
+                }
+            }
         }
     }
 }

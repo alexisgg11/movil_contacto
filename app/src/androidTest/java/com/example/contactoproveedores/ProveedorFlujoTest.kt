@@ -35,6 +35,7 @@ class ProveedorFlujoTest {
         compose.onNode(hasScrollToIndexAction()).performScrollToIndex(2)
         compose.onNode(hasSetTextAction() and hasText("Buscar proveedores"))
             .performScrollTo().performTextInput(empresa)
+        androidx.test.espresso.Espresso.closeSoftKeyboard()
         compose.onNode(hasScrollToIndexAction()).performScrollToIndex(3)
         compose.onNode(hasText(empresa) and hasSetTextAction().not()).performScrollTo().assertIsDisplayed()
         compose.onNodeWithContentDescription("Eliminar proveedor").performScrollTo().performClick()

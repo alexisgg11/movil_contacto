@@ -7,6 +7,7 @@ Proyecto del curso **Tecnología y Desarrollo Móvil**: app Android en **Kotlin 
 - Seis campos obligatorios: empresa, persona de contacto, teléfono, correo, dirección y rubro.
 - Registro con validación en Android y en el servidor.
 - Directorio con tarjetas e iconos, diseñado para celular.
+- Tarjetas contraídas: pulsa **Ver detalle** para mostrar teléfono, correo y dirección, y **Ocultar detalle** para contraerlas.
 - Búsqueda por cualquiera de los campos de la lista cargada.
 - Eliminación con confirmación.
 - Estados de carga, errores y reintento.
@@ -155,6 +156,7 @@ HTTP sin cifrar se permite solo en **debug**. Para distribuir una versión **rel
 | No se encuentra PostgreSQL 18 | Verifica la instalación y ajusta la ruta de `psql.exe` si corresponde. |
 | Puerto 8080 ocupado | Comprueba si ya hay un backend abierto. No ejecutes dos instancias. |
 | SDK o Gradle incompatible | Usa Android Studio compatible con AGP 9.4.1, API 37 y el JDK configurado. |
+| `Device is already activating` o emulador que no conecta | No pulses Run repetidamente. Detén el dispositivo desde Device Manager y usa **Cold Boot**. Comprueba con `C:\Android\Sdk\platform-tools\adb.exe devices` que aparezca como `device`, no `offline`. Si tu SDK está en otra ruta, adapta el comando. Evita **Wipe Data**, que borra los datos locales del emulador. |
 | Error de socket/ruta temporal de Java | Usa una ruta corta y los scripts del proyecto, que configuran los temporales. |
 | No aparecen datos de otro equipo | Cada PC tiene su propia base; GitHub comparte el código, no registros ni credenciales. |
 | El teléfono físico no conecta | Revisa IP de la PC, recompilación, misma Wi-Fi y acceso al puerto 8080. |
