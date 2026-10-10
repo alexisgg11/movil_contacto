@@ -23,7 +23,14 @@ public class ProveedorService {
     }
     @Transactional
     public ProveedorResponse agregar(ProveedorRequest request) {
-        return ProveedorResponse.de(repository.save(new Proveedor(request)));
+        boolean existe = repository.findAll().stream().anyMatch(p ->
+            normalizarEmpresa(p.getEmpresa()).equals(normalizarEmpresa(request.empresa())));
+        if (existe) throw new ResponseStatusException(HttpStatus.CONFLICT,
+            "Ya existe un proveedor con esa empresa. Busca el registro antes de agregarlo nuevamente.");
+        return ProveedorResponse.de(repository.saveAndFlush(new Proveedor(request)));
+    }
+    private static String normalizarEmpresa(String empresa) {
+        return empresa.trim().replaceAll("\\s+", " ").toLowerCase(java.util.Locale.ROOT);
     }
     @Transactional
     public void eliminar(Long id) {

@@ -19,6 +19,9 @@ class ProveedorFlujoTest {
         compose.waitUntil(15000) {
             compose.onAllNodesWithText("+  Agregar proveedor").fetchSemanticsNodes().singleOrNull()?.config?.contains(SemanticsProperties.Disabled) == false
         }
+        compose.onNodeWithText("+  Agregar proveedor").performScrollTo().performClick()
+        compose.onNodeWithText("Revisa el formulario").assertIsDisplayed()
+        compose.onNodeWithText("Entendido").performClick()
         val campos = mapOf("Empresa" to empresa, "Persona de contacto" to "Ana Torres",
             "Teléfono" to "987654321", "Correo electrónico" to "ana@andina.pe",
             "Dirección" to "Av. Primavera 120, Lima", "Rubro" to "Suministros")
@@ -28,6 +31,14 @@ class ProveedorFlujoTest {
         compose.onNodeWithText("+  Agregar proveedor").performScrollTo().performClick()
         compose.onNode(hasScrollToIndexAction()).performScrollToIndex(2)
         compose.waitUntil(15000) { compose.onAllNodesWithText("Proveedor guardado").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Registro exitoso").assertIsDisplayed()
+        compose.onNodeWithText("Entendido").performClick()
+        campos.forEach { (etiqueta, texto) ->
+            compose.onNode(hasSetTextAction() and hasText(etiqueta)).performScrollTo().performTextInput(texto)
+        }
+        compose.onNodeWithText("+  Agregar proveedor").performScrollTo().performClick()
+        compose.onNodeWithText("Proveedor duplicado").assertIsDisplayed()
+        compose.onNodeWithText("Entendido").performClick()
         compose.activityRule.scenario.recreate()
         compose.waitUntil(15000) {
             compose.onAllNodesWithText("+  Agregar proveedor").fetchSemanticsNodes().singleOrNull()?.config?.contains(SemanticsProperties.Disabled) == false
@@ -43,6 +54,11 @@ class ProveedorFlujoTest {
         compose.onAllNodesWithText("Eliminar").onLast().performClick()
         compose.onNode(hasScrollToIndexAction()).performScrollToIndex(2)
         compose.waitUntil(15000) { compose.onAllNodesWithText("Proveedor eliminado").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Eliminación exitosa").assertIsDisplayed()
+        compose.onNodeWithText("Entendido").performClick()
         compose.onNodeWithText("Sin coincidencias").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Buscar", substring = false).performScrollTo().performClick()
+        compose.onNodeWithText("Proveedor no encontrado").assertIsDisplayed()
+        compose.onNodeWithText("Entendido").performClick()
     }
 }

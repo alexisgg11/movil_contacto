@@ -15,4 +15,13 @@ class ValidarProveedorTest {
     @Test fun rechazaLongitudesExcesivas() {
         assertTrue(ValidarProveedor.errores(valido.copy(empresa = "a".repeat(121))).containsKey(Campo.EMPRESA))
     }
+    @Test fun telefonoDebeContenerDigitosReales() {
+        listOf("-------", "( ) - -", "123456", "1234567890123456").forEach {
+            assertTrue(ValidarProveedor.errores(valido.copy(telefono = it)).containsKey(Campo.TELEFONO))
+        }
+    }
+    @Test fun rechazaTextosDemasiadoCortos() {
+        assertTrue(ValidarProveedor.errores(valido.copy(empresa = "A")).containsKey(Campo.EMPRESA))
+        assertTrue(ValidarProveedor.errores(valido.copy(contacto = " ")).containsKey(Campo.CONTACTO))
+    }
 }

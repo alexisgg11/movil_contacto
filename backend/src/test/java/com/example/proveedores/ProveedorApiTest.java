@@ -39,4 +39,26 @@ class ProveedorApiTest {
              "direccion":"Lima","rubro":"Suministros"}
             """)).andExpect(status().isBadRequest());
     }
+    @Test void rechazaEmpresaDuplicadaConMayusculasYEspacios() throws Exception {
+        String cuerpo = """
+            {"empresa":"Empresa Duplicada","contacto":"Ana","telefono":"987654321",
+             "correo":"ana@andina.pe","direccion":"Lima","rubro":"Servicios"}
+            """;
+        var respuesta = mvc.perform(post("/api/proveedores").contentType("application/json").content(cuerpo))
+            .andExpect(status().isCreated()).andReturn();
+        long id = json.readTree(respuesta.getResponse().getContentAsString()).get("id").asLong();
+        try {
+            mvc.perform(post("/api/proveedores").contentType("application/json")
+                .content(cuerpo.replace("Empresa Duplicada", "  EMPRESA   DUPLICADA  ")))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.message").exists());
+        } finally { mvc.perform(delete("/api/proveedores/" + id)).andExpect(status().isNoContent()); }
+    }
+    @Test void rechazaTelefonoSinDigitosYJsonMalformado() throws Exception {
+        mvc.perform(post("/api/proveedores").contentType("application/json").content("""
+            {"empresa":"Andina","contacto":"Ana","telefono":"-------","correo":"ana@andina.pe",
+             "direccion":"Lima","rubro":"Servicios"}
+            """)).andExpect(status().isBadRequest());
+        mvc.perform(post("/api/proveedores").contentType("application/json").content("{invalido"))
+            .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").exists());
+    }
 }

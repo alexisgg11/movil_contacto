@@ -6,14 +6,21 @@ Proyecto del curso **Tecnología y Desarrollo Móvil**: app Android en **Kotlin 
 
 - Seis campos obligatorios: empresa, persona de contacto, teléfono, correo, dirección y rubro.
 - Registro con validación en Android y en el servidor.
+- Empresa única: se rechaza el mismo nombre aunque cambien mayúsculas o espacios. Teléfono y correo pueden compartirse entre empresas.
+- Modales para formulario inválido, duplicados, registro/eliminación exitosos y errores de conexión.
 - Directorio con tarjetas e iconos, diseñado para celular.
 - Tarjetas contraídas: pulsa **Ver detalle** para mostrar teléfono, correo y dirección, y **Ocultar detalle** para contraerlas.
 - Búsqueda por cualquiera de los campos de la lista cargada.
+- Pulsa **Buscar** o la acción de búsqueda del teclado para recibir un modal si no hay coincidencias. El filtrado continúa al escribir sin interrumpirte con ventanas.
 - Eliminación con confirmación.
 - Estados de carga, errores y reintento.
 - Los datos permanecen después de cerrar la app y reiniciar el backend.
 
 No incluye edición de proveedores guardados ni funcionamiento sin conexión.
+
+Empresa, contacto, dirección y rubro requieren entre 2 caracteres y su límite de longitud. El teléfono debe tener de 7 a 15 dígitos y admite prefijo `+`, espacios, guiones y paréntesis (máximo 20 caracteres). Se verifica el formato del correo; no su existencia real.
+
+La migración V2 añade un índice único de empresas normalizadas en PostgreSQL, protegiendo también frente a registros simultáneos. Si una instalación antigua ya tiene empresas duplicadas, revisa esos registros antes de actualizar: la migración se detiene y no los elimina automáticamente.
 
 ## Cómo funciona
 

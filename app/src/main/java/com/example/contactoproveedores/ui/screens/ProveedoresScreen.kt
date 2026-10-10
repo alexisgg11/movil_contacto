@@ -17,7 +17,7 @@ import com.example.contactoproveedores.viewmodel.ProveedoresState
 @Composable
 fun ProveedoresScreen(state: ProveedoresState, editar: (Campo, String) -> Unit,
     buscar: (String) -> Unit, agregar: () -> Unit, confirmar: (Proveedor?) -> Unit,
-    eliminar: () -> Unit, recargar: () -> Unit) {
+    eliminar: () -> Unit, recargar: () -> Unit, cerrarModal: () -> Unit = {}, buscarConfirmado: () -> Unit = {}) {
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box(Modifier.fillMaxSize().systemBarsPadding().imePadding(), contentAlignment = Alignment.TopCenter) {
             LazyColumn(Modifier.widthIn(max = 600.dp).fillMaxWidth().fillMaxHeight(), contentPadding = PaddingValues(16.dp),
@@ -35,7 +35,7 @@ fun ProveedoresScreen(state: ProveedoresState, editar: (Campo, String) -> Unit,
                 item {
                     Column(Modifier.padding(top = 24.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         CabeceraDirectorio(state.proveedores.size, state.resultados.size,
-                            state.busqueda, state.ocupado, buscar, recargar)
+                            state.busqueda, state.ocupado, buscar, recargar, buscarConfirmado)
                         if (state.ocupado) LinearProgressIndicator(Modifier.fillMaxWidth())
                         state.aviso?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
                         state.error?.let {
@@ -75,6 +75,7 @@ fun ProveedoresScreen(state: ProveedoresState, editar: (Campo, String) -> Unit,
             confirmButton = { TextButton(onClick = eliminar, enabled = !state.ocupado) { Text("Eliminar") } },
             dismissButton = { TextButton(onClick = { confirmar(null) }, enabled = !state.ocupado) { Text("Cancelar") } })
     }
+    state.modal?.let { ModalResultado(it, cerrarModal) }
 }
 @Preview(showBackground = true, widthDp = 420, heightDp = 1000)
 @Composable

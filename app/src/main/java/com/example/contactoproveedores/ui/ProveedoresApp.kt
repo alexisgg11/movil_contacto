@@ -24,5 +24,5 @@ private fun ProveedoresRoute() {
     })
     val state by model.state.collectAsStateWithLifecycle()
     ProveedoresScreen(state, model::editar, model::buscar, model::agregar,
-        model::confirmar, model::eliminar, model::cargar)
+        model::confirmar, model::eliminar, model::cargar, model::cerrarModal, model::buscarConfirmado)
 }

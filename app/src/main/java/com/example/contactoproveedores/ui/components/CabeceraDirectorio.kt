@@ -4,6 +4,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -12,7 +16,9 @@ import com.example.contactoproveedores.R
 
 @Composable
 fun CabeceraDirectorio(total: Int, resultados: Int, busqueda: String, ocupado: Boolean,
-    buscar: (String) -> Unit, recargar: () -> Unit) {
+    buscar: (String) -> Unit, recargar: () -> Unit, buscarConfirmado: () -> Unit) {
+    val teclado = LocalSoftwareKeyboardController.current
+    val consultar = { teclado?.hide(); buscarConfirmado() }
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -30,6 +36,8 @@ fun CabeceraDirectorio(total: Int, resultados: Int, busqueda: String, ocupado: B
             }
         }
         OutlinedTextField(value = busqueda, onValueChange = buscar, modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { consultar() }),
             singleLine = true, label = { Text("Buscar proveedores") },
             placeholder = { Text("Empresa o contacto") }, shape = RoundedCornerShape(10.dp),
             leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null,
@@ -40,5 +48,7 @@ fun CabeceraDirectorio(total: Int, resultados: Int, busqueda: String, ocupado: B
                         modifier = Modifier.size(20.dp))
                 }
             })
+        OutlinedButton(onClick = { consultar() }, enabled = !ocupado,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Buscar") }
     }
 }
