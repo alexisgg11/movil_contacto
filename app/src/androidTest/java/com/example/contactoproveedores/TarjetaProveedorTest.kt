@@ -35,11 +35,15 @@ class TarjetaProveedorTest {
         compose.onNodeWithContentDescription("Desactivar proveedor").performClick()
         compose.runOnIdle { assertEquals(1, ediciones); assertEquals(1, estados) }
         compose.onNodeWithText("987654321").assertDoesNotExist()
-        compose.onNodeWithText("Ver detalle").performClick()
+        compose.onNodeWithText("Ver detalle").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Expandir detalle").performClick()
         compose.onNodeWithText("987654321").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Contraer detalle").assertExists()
         compose.onNodeWithContentDescription("Editar proveedor").performClick()
         compose.onNodeWithContentDescription("Desactivar proveedor").performClick()
         compose.runOnIdle { assertEquals(2, ediciones); assertEquals(2, estados) }
         compose.onNodeWithText("987654321").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Contraer detalle").performClick()
+        compose.onNodeWithText("987654321").assertDoesNotExist()
     }
 }

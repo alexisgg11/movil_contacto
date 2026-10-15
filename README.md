@@ -8,7 +8,7 @@ Proyecto del curso **Tecnología y Desarrollo Móvil**. Aplicación Android nati
 - Panel con total de proveedores, activos e inactivos.
 - Registro y edición en un modal con seis campos: empresa, contacto, teléfono, correo, dirección y rubro. Rubro es un selector con opciones; si un registro antiguo tiene otro rubro, se conserva como opción actual.
 - Búsqueda con icono de lupa junto al campo, filtros combinables por estado y rubro, y páginas de 5 registros ordenadas por código ascendente.
-- Filas compactas con detalle expandible al tocar la tarjeta; un segundo toque lo contrae. Editar y cambiar estado tienen acciones independientes. Tabla desde 840 dp de ancho disponible.
+- Filas compactas con detalle expandible al tocar la tarjeta; un segundo toque lo contrae. Una flecha hacia abajo/arriba indica el estado, sin botón de texto “Ver detalle”. Editar y cambiar estado tienen acciones independientes. Tabla desde 840 dp de ancho disponible.
 - Desactivación y reactivación con confirmación. **No se borran los registros desde la API ni desde Android.**
 - Validaciones de campos obligatorios, longitudes, teléfono y correo.
 - Empresas únicas, ignorando mayúsculas y espacios repetidos, incluso si están inactivas.
@@ -486,6 +486,7 @@ La prueba de interfaz registra su propia empresa con prefijo `Proveedor CRM UI`,
 | Fallo de autenticación PostgreSQL | Revisa usuario/contraseña en `.env` y confirma que coincidan con PostgreSQL. El archivo XML anterior ya no se utiliza. |
 | Puerto 8080 ocupado | No inicies dos instancias del backend. |
 | SDK/Gradle incompatible | Android Studio compatible con AGP 9.4.1, API 37 y JDK configurado. |
+| `Json`, `Serializable` o `ignoreUnknownKeys` aparecen rojos, pero Gradle compila | Tras actualizar dependencias, usa **File → Sync Project with Gradle Files** y espera a que termine la sincronización e indexación. Compilar por terminal no actualiza por sí solo el modelo de dependencias del editor. |
 | Emulador `offline` o `Device is already activating` | No pulses Run repetidamente. Detén el dispositivo y usa **Cold Boot** en Device Manager. |
 | Emulador se cierra inesperadamente | Prueba arranque en frío y gráficos **Software** en su configuración. Evita Wipe Data si necesitas conservar datos locales. |
 | Error de ruta temporal Java | Usa una ruta corta y los scripts del proyecto. |

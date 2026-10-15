@@ -1,6 +1,7 @@
 package com.example.contactoproveedores.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -21,6 +23,7 @@ import com.example.contactoproveedores.domain.model.Proveedor
 fun TarjetaProveedor(p: Proveedor, ocupado: Boolean, editar: () -> Unit,
                      cambiarEstado: () -> Unit, tabla: Boolean = false) {
     var expandido by rememberSaveable(p.id) { mutableStateOf(false) }
+    val giroFlecha by animateFloatAsState(if (expandido) 180f else 0f, label = "Giro del detalle")
     OutlinedCard(onClick = { expandido = !expandido },
         modifier = Modifier.fillMaxWidth().semantics {
             stateDescription = if (expandido) "Detalle expandido" else "Detalle contraído"
@@ -46,16 +49,16 @@ fun TarjetaProveedor(p: Proveedor, ocupado: Boolean, editar: () -> Unit,
                 if (tabla) Row {
                     AccionesFilaProveedor(p.activo, ocupado, editar, cambiarEstado)
                     IconButton(onClick = { expandido = !expandido }, modifier = Modifier.size(48.dp)) {
-                        Icon(painterResource(R.drawable.ic_expand), if (expandido) "Ocultar detalle" else "Ver detalle", Modifier.size(18.dp))
+                        Icon(painterResource(R.drawable.ic_expand), if (expandido) "Contraer detalle" else "Expandir detalle",
+                            Modifier.size(20.dp).rotate(giroFlecha))
                     }
                 }
             }
             if (!tabla) Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(onClick = { expandido = !expandido }) {
-                    Text(if (expandido) "Ocultar detalle" else "Ver detalle")
-                    Spacer(Modifier.width(4.dp))
-                    Icon(painterResource(R.drawable.ic_expand), null, Modifier.size(16.dp))
+                IconButton(onClick = { expandido = !expandido }) {
+                    Icon(painterResource(R.drawable.ic_expand), if (expandido) "Contraer detalle" else "Expandir detalle",
+                        Modifier.size(20.dp).rotate(giroFlecha))
                 }
                 AccionesFilaProveedor(p.activo, ocupado, editar, cambiarEstado)
             }
