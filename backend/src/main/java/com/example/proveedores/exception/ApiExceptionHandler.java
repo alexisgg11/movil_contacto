@@ -9,6 +9,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(ProveedorDuplicadoException.class)
+    public ResponseEntity<Map<String, String>> duplicado(ProveedorDuplicadoException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
+    }
+    @ExceptionHandler(ProveedorNoEncontradoException.class)
+    public ResponseEntity<Map<String, String>> ausente(ProveedorNoEncontradoException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+    }
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> validacion(MethodArgumentNotValidException e) {
         String campos = e.getBindingResult().getFieldErrors().stream()

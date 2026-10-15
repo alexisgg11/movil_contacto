@@ -22,3 +22,7 @@ local.properties
 .env.*
 *.jks
 *.keystore
+*.p12
+*.pfx
+*.pem
+*.key

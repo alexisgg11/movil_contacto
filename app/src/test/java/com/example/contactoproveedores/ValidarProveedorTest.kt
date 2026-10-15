@@ -1,5 +1,6 @@
 package com.example.contactoproveedores
-import com.example.contactoproveedores.domain.*
+import com.example.contactoproveedores.domain.model.*
+import com.example.contactoproveedores.domain.validation.ValidarProveedor
 import org.junit.Assert.*
 import org.junit.Test
 class ValidarProveedorTest {

@@ -1,60 +1,52 @@
-# Contacto Proveedores
+# Contacto · Panel de proveedores
 
-Proyecto del curso **Tecnología y Desarrollo Móvil**: app Android en **Kotlin y Jetpack Compose**, backend en **Java y Spring Boot**, y almacenamiento persistente en **PostgreSQL**.
+Proyecto del curso **Tecnología y Desarrollo Móvil**. Aplicación Android nativa en **Kotlin y Jetpack Compose**, API independiente en **Java y Spring Boot**, y persistencia en **PostgreSQL**.
 
-## Funcionalidades
+## Qué incluye
 
-- Seis campos obligatorios: empresa, persona de contacto, teléfono, correo, dirección y rubro.
-- Registro con validación en Android y en el servidor.
-- Empresa única: se rechaza el mismo nombre aunque cambien mayúsculas o espacios. Teléfono y correo pueden compartirse entre empresas.
-- Modales para formulario inválido, duplicados, registro/eliminación exitosos y errores de conexión.
-- Directorio con tarjetas e iconos, diseñado para celular.
-- Tarjetas contraídas: pulsa **Ver detalle** para mostrar teléfono, correo y dirección, y **Ocultar detalle** para contraerlas.
-- Búsqueda por cualquiera de los campos de la lista cargada.
-- Pulsa **Buscar** o la acción de búsqueda del teclado para recibir un modal si no hay coincidencias. El filtrado continúa al escribir sin interrumpirte con ventanas.
-- Eliminación con confirmación.
-- Estados de carga, errores y reintento.
-- Los datos permanecen después de cerrar la app y reiniciar el backend.
+- Menú con **Resumen** y **Proveedores**.
+- Panel con total de proveedores, activos e inactivos.
+- Registro y edición en un modal con seis campos: empresa, contacto, teléfono, correo, dirección y rubro.
+- Búsqueda y filtros por estado.
+- Filas compactas con detalle expandible en celular; tabla desde 840 dp de ancho disponible.
+- Desactivación y reactivación con confirmación. **No se borran los registros desde la API ni desde Android.**
+- Validaciones de campos obligatorios, longitudes, teléfono y correo.
+- Empresas únicas, ignorando mayúsculas y espacios repetidos, incluso si están inactivas.
+- Modales de validación, confirmación, éxito y error.
 
-No incluye edición de proveedores guardados ni funcionamiento sin conexión.
-
-Empresa, contacto, dirección y rubro requieren entre 2 caracteres y su límite de longitud. El teléfono debe tener de 7 a 15 dígitos y admite prefijo `+`, espacios, guiones y paréntesis (máximo 20 caracteres). Se verifica el formato del correo; no su existencia real.
-
-La migración V2 añade un índice único de empresas normalizadas en PostgreSQL, protegiendo también frente a registros simultáneos. Si una instalación antigua ya tiene empresas duplicadas, revisa esos registros antes de actualizar: la migración se detiene y no los elimina automáticamente.
+El registro es único por empresa; teléfono y correo pueden compartirse entre empresas. La edición excluye el propio identificador al comprobar duplicados y conserva su estado.
 
 ## Cómo funciona
 
 ```text
-Android (Kotlin + Compose)
-    │ HTTP / JSON
-    ▼
-Backend (Java + Spring Boot, puerto 8080)
-    │ JPA / Hibernate
-    ▼
-PostgreSQL (puerto 5432, base contacto_proveedores)
+Android / Compose → ViewModel → Repositorio → HTTP / JSON
+                                                ↓
+Java / Spring Boot: Controller → Service → Repository / JPA → PostgreSQL
+                                   ↕
+                                 Mapper
+                                   ↕
+                             DTO de entrada/salida
 ```
 
-**Android no accede directamente a PostgreSQL.** Para consultar, registrar o eliminar deben estar funcionando PostgreSQL y el backend. Apagarlos no borra los datos.
+Android no se conecta directamente a PostgreSQL. El backend debe estar activo para consultar, guardar, editar y cambiar el estado. La app no tiene modo sin conexión ni utiliza Room. Cerrar app o servidor no borra los datos.
 
 ## Instalación fácil en Windows
 
-Los scripts de instalación usan PowerShell y cifrado de credenciales de Windows. Cada compañero prepara su propia base en su PC.
+### 1. Requisitos
 
-### 1. Instalar los requisitos
-
-| Herramienta | Qué necesita este proyecto |
+| Herramienta | Requisito del proyecto |
 |---|---|
-| [Android Studio](https://developer.android.com/studio) | Versión compatible con Android Gradle Plugin **9.4.1**. Verificado con Android Studio **2026.1.4**. |
-| Android SDK | Instalar **API 37** desde SDK Manager y las herramientas que solicite Gradle. |
-| Java/JDK | El daemon Gradle de Android está configurado con **JDK 25** y puede descargarlo durante la sincronización. Los scripts usan el JDK incluido en Android Studio o un `JAVA_HOME` válido. |
-| [PostgreSQL 18 para Windows](https://www.postgresql.org/download/windows/) | Instalar servidor y herramientas de línea de comandos, conservar la contraseña del usuario `postgres` y usar el puerto **5432**. |
-| [Git para Windows](https://git-scm.com/downloads/win) | Para clonar; también puedes descargar ZIP desde GitHub. |
+| [Android Studio](https://developer.android.com/studio) | Compatible con Android Gradle Plugin **9.4.1**; verificado con Android Studio **2026.1.4**. |
+| Android SDK | **API 37** y las herramientas que solicite la sincronización. |
+| Java | El daemon Gradle Android está configurado con **JDK 25**, descargable durante la sincronización. Los scripts usan el JDK de Android Studio o un `JAVA_HOME` válido. El backend compila código Java 17. |
+| [PostgreSQL 18](https://www.postgresql.org/download/windows/) | Servidor y herramientas de línea de comandos; puerto predeterminado **5432**. Conserva la contraseña elegida para `postgres`. |
+| [Git para Windows](https://git-scm.com/downloads/win) | Para clonar; alternativamente descarga ZIP. |
 
-Necesitas Internet para descargar las dependencias inicialmente. **No instales Gradle ni Maven por separado**: se incluye Gradle Wrapper. El código del backend usa Java 17; esto es distinto del JDK 25 configurado para ejecutar Gradle en Android.
+Necesitas Internet para descargar dependencias. No instales Gradle ni Maven por separado: el repositorio incluye Gradle Wrapper.
 
-### 2. Descargar
+### 2. Descargar y abrir
 
-En PowerShell:
+Desde PowerShell:
 
 ```powershell
 New-Item -ItemType Directory -Force C:\Android | Out-Null
@@ -62,150 +54,162 @@ git clone https://github.com/alexisgg11/movil_contacto.git C:\Android\contacto
 cd C:\Android\contacto
 ```
 
-Si esa carpeta existe, elige otra vacía. Se recomienda una ruta corta para evitar problemas con archivos temporales de Java en Windows.
+Usa otra carpeta vacía si esa ruta ya existe. Se recomienda una ruta corta. Sin Git, usa **Code → Download ZIP** y descomprime.
 
-**Sin Git:** pulsa **Code → Download ZIP**, descomprime y busca la carpeta que contiene `settings.gradle.kts`. No crees otro proyecto Empty Activity ni copies solamente `app`.
+En Android Studio:
 
-### 3. Abrir en Android Studio
+1. **Open** o **File → Open** y selecciona la raíz `contacto`, que contiene `settings.gradle.kts`.
+2. No crees otro proyecto Empty Activity ni abras solo `app` o `backend`.
+3. Espera **Gradle Sync** y acepta las descargas necesarias.
+4. Instala **API 37** en **Tools → SDK Manager**. Si no aparece, actualiza Android Studio y sus herramientas.
+5. Si lo solicita, permite descargar **JDK 25**. La configuración de Java de Gradle está en **Settings → Build, Execution, Deployment → Build Tools → Gradle**.
 
-1. Pulsa **Open**, o **File → Open** si ya tienes otro proyecto abierto.
-2. Selecciona la raíz `C:\Android\contacto`, no `app` ni `backend`.
-3. Espera a que termine **Gradle Sync**. Acepta la descarga de herramientas que solicite.
-4. En **Tools → SDK Manager → SDK Platforms**, instala **Android API 37**. Si no aparece, actualiza Android Studio y las herramientas del SDK.
-5. Si se solicita el JDK del daemon, permite descargar **JDK 25**. Revisa Java de Gradle en **Settings → Build, Execution, Deployment → Build Tools → Gradle** si falla la sincronización.
+Android Studio genera `local.properties` con la ruta del SDK de tu propia PC. Ese archivo no se comparte.
 
-Android Studio crea `local.properties` con la ruta del SDK de tu PC; ese archivo no se comparte.
+### 3. Preparar PostgreSQL: una sola vez por equipo
 
-### 4. Preparar PostgreSQL — solo la primera vez
-
-Comprueba en **Servicios** de Windows que PostgreSQL esté iniciado. En la terminal de Android Studio, selecciona PowerShell y ejecuta desde la raíz:
+Comprueba que el servicio PostgreSQL esté iniciado en **Servicios** de Windows. En PowerShell, desde la raíz:
 
 ```powershell
-cd C:\Android\contacto
 powershell -ExecutionPolicy Bypass -File .\scripts\Preparar-Postgres.ps1
 ```
 
-Introduce la contraseña del usuario **postgres** de tu instalación. La entrada permanece oculta; es normal que no aparezcan letras.
+Escribe la contraseña de **postgres** elegida al instalar PostgreSQL. La entrada es oculta; no aparecen caracteres mientras escribes.
 
-El script crea la base `contacto_proveedores`, el usuario `contacto_app` y `.local/db-credential.xml` con credenciales cifradas. El mensaje esperado es **«Base contacto_proveedores creada»**.
+El script crea la base `contacto_proveedores`, el usuario `contacto_app` y una contraseña aleatoria cifrada en `.local/db-credential.xml`. Espera el mensaje **«Base contacto_proveedores creada»**.
 
-**No crees tablas ni importes respaldos manualmente**: Flyway crea la tabla cuando inicia el backend. Cada instalación comienza vacía, sin los contactos del autor.
+La ruta predeterminada de `psql.exe` es `C:\Program Files\PostgreSQL\18\bin\psql.exe`. Si tu instalación es distinta, ajusta `$psql` en el script.
 
-El script busca `psql.exe` en `C:\Program Files\PostgreSQL\18\bin\psql.exe`. Si lo instalaste en otra ubicación, ajusta la variable `$psql` al inicio de `scripts/Preparar-Postgres.ps1`.
+No crees tablas ni importes respaldos manualmente. Flyway aplica las migraciones al iniciar el servidor. Cada compañero comienza con su propia base vacía; clonar Git no copia contactos ni credenciales.
 
-Las credenciales están cifradas para el usuario de Windows de ese equipo. No copies el archivo de otro compañero. Si la base y credenciales locales ya están preparadas, el script informa de ello. Si existen esos nombres sin una configuración local compatible, se detiene para no modificar datos existentes. No borres bases sin revisar su contenido.
+El script no sobrescribe una base o un usuario existentes sin la configuración local correspondiente. Si encuentra esos nombres, revisa la instalación antes de reutilizarlos; no borres bases sin revisar su contenido.
 
-### 5. Iniciar el backend
-
-Desde la raíz del proyecto:
+### 4. Iniciar Spring Boot
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\Iniciar-Backend.ps1
 ```
 
-Espera **`Tomcat started on port 8080`** y **`Started ProveedoresApplication`**. La primera ejecución puede tardar por las descargas.
+Espera **`Tomcat started on port 8080`** y **`Started ProveedoresApplication`**. La primera ejecución descarga dependencias.
 
-**Mantén esa terminal abierta.** Este comando inicia Spring Boot; no inicia PostgreSQL ni Android. Para detenerlo, pulsa `Ctrl+C`.
+Mantén abierta la terminal; `Ctrl+C` detiene el servidor. Este comando inicia Spring Boot, no PostgreSQL ni Android.
 
-Comprueba la API abriendo en el navegador de la PC:
+Comprueba en el navegador de la PC:
 
 ```text
 http://localhost:8080/api/proveedores
 ```
 
-Si no hay registros, debe aparecer `[]`: el servidor respondió correctamente.
+Una instalación sin registros devuelve `[]`.
 
-### 6. Ejecutar Android
+### 5. Ejecutar Android
 
-1. Abre **Tools → Device Manager** y crea un emulador, por ejemplo Pixel 7.
-2. Descarga una imagen de Android compatible e inicia el emulador. El mínimo de la app es **Android 7.0 / API 24**.
-3. Selecciona la configuración **app** y pulsa **Run ▶**.
-4. Si aparece la solicitud de permiso de red local, concédelo para acceder al servidor de la PC.
-5. Completa los seis campos, agrega un proveedor y comprueba que aparezca en el directorio.
+1. Abre **Tools → Device Manager** y crea/inicia un emulador, por ejemplo Pixel 7. Mínimo: **Android 7 / API 24**.
+2. Selecciona **app** y pulsa **Run ▶**.
+3. Concede el permiso de red local cuando aparezca.
+4. Pulsa **Registrar proveedor** para abrir el modal. La edición usa el icono de lápiz; el botón de estado desactiva o reactiva después de confirmar.
 
-El emulador usa la dirección predeterminada **`http://10.0.2.2:8080/`** para acceder a la PC. No la reemplaces por `localhost`, que dentro del emulador representa al propio dispositivo virtual.
+El emulador usa `http://10.0.2.2:8080/` para acceder al backend de la PC. No uses `localhost` dentro del emulador: representa al propio teléfono virtual.
 
-## Qué ejecutar cada día
+## Qué hacer cada día
 
-Después de la primera instalación:
+1. Comprueba el servicio PostgreSQL.
+2. Inicia el backend si no está activo.
+3. Ejecuta Android.
 
-1. Comprueba que PostgreSQL esté funcionando; normalmente inicia como servicio de Windows.
-2. Ejecuta `scripts/Iniciar-Backend.ps1` si el servidor no está activo.
-3. Ejecuta la app desde Android Studio.
+No recrees la base ni ejecutes dos servidores en el puerto 8080. Al actualizar desde una versión anterior, reinicia el backend y recompila Android: esta versión añade edición y estado.
 
-No repitas la creación de la base. No inicies otro backend si uno ya está escuchando en el puerto 8080. Cerrar la app o el backend no borra los proveedores.
+## ¿Dónde están las credenciales?
 
-## Usar un teléfono físico
+La instalación automatizada las guarda en:
 
-1. Conecta la PC y el teléfono a la misma red Wi-Fi.
-2. Ejecuta `ipconfig` y busca la IPv4 de la PC en esa red.
-3. En tu archivo personal `%USERPROFILE%\.gradle\gradle.properties`, agrega esta propiedad sustituyendo la IP:
+```text
+<carpeta-del-proyecto>/.local/db-credential.xml
+Ejemplo: C:\Android\contacto\.local\db-credential.xml
+```
 
-   ```properties
-   API_BASE_URL=http://192.168.1.50:8080/
-   ```
+- Es una credencial cifrada con **Windows DPAPI**, vinculada al usuario y equipo que la creó; no es un archivo de texto con contraseña legible.
+- `.local/` está excluida por `.gitignore`. **Nunca subas este archivo a GitHub.**
+- La lectura se centraliza en `scripts/common/Credenciales-Postgres.ps1`.
+- El script de inicio pasa la contraseña mediante `DB_PASSWORD` y restaura las variables al terminar.
+- `application.properties` contiene `${DB_PASSWORD}`, no una contraseña real.
+- `DB_USER` también se recibe por variable de entorno; el script lo obtiene de la credencial cifrada. `DB_URL` permite cambiar la conexión y tiene una dirección local predeterminada sin secretos.
+- Android solo conoce la URL de la API; no recibe credenciales PostgreSQL.
+- Cada compañero debe ejecutar la preparación en su máquina. No copies credenciales cifradas de otro usuario/equipo.
 
-4. Permite al backend el acceso en la red privada si Windows lo solicita. El teléfono debe poder acceder al puerto TCP 8080.
-5. Sincroniza y vuelve a compilar/ejecutar la app: la dirección se incorpora durante la compilación.
+Para una base administrada manualmente, configura `DB_URL`, `DB_USER`, `DB_PASSWORD` y ejecuta `.\gradlew.bat -p backend run`. En Linux/macOS prepara la base y las variables manualmente y usa `./gradlew -p backend run`; los scripts automáticos son para Windows.
 
-Para volver al emulador, elimina la propiedad y recompila. Esta propiedad personal afecta a otros proyectos que usen el mismo nombre.
+## Teléfono físico
 
-HTTP sin cifrar se permite solo en **debug**. Para distribuir una versión **release**, configura HTTPS. El proyecto académico no incluye autenticación; úsalo en una red de pruebas.
+Conecta PC y teléfono a la misma Wi-Fi. Obtén la IPv4 de la PC con `ipconfig` y añade, en `%USERPROFILE%\.gradle\gradle.properties`, tu dirección real:
 
-## Solución de problemas
+```properties
+API_BASE_URL=http://192.168.1.50:8080/
+```
 
-| Problema | Solución |
-|---|---|
-| Agregar deshabilitado o error de conexión | Inicia el backend, concede permiso de red local y pulsa **Actualizar**. Agregar requiere una carga inicial correcta y se deshabilita mientras hay una operación. |
-| El navegador no abre la API | Revisa la terminal del backend y el servicio PostgreSQL. |
-| Contraseña rechazada en la preparación | Usa la contraseña de `postgres` de tu instalación, no la de Windows. |
-| Se solicita ejecutar Preparar-Postgres | Ejecuta la preparación en esta PC y con tu usuario de Windows. |
-| No se encuentra PostgreSQL 18 | Verifica la instalación y ajusta la ruta de `psql.exe` si corresponde. |
-| Puerto 8080 ocupado | Comprueba si ya hay un backend abierto. No ejecutes dos instancias. |
-| SDK o Gradle incompatible | Usa Android Studio compatible con AGP 9.4.1, API 37 y el JDK configurado. |
-| `Device is already activating` o emulador que no conecta | No pulses Run repetidamente. Detén el dispositivo desde Device Manager y usa **Cold Boot**. Comprueba con `C:\Android\Sdk\platform-tools\adb.exe devices` que aparezca como `device`, no `offline`. Si tu SDK está en otra ruta, adapta el comando. Evita **Wipe Data**, que borra los datos locales del emulador. |
-| Error de socket/ruta temporal de Java | Usa una ruta corta y los scripts del proyecto, que configuran los temporales. |
-| No aparecen datos de otro equipo | Cada PC tiene su propia base; GitHub comparte el código, no registros ni credenciales. |
-| El teléfono físico no conecta | Revisa IP de la PC, recompilación, misma Wi-Fi y acceso al puerto 8080. |
+Permite el acceso al puerto TCP 8080 en la red privada y recompila. Para volver al emulador, elimina la propiedad y recompila. La propiedad personal también afecta a otros proyectos que utilicen ese nombre.
+
+HTTP está permitido solo en **debug**. Para una distribución release configura HTTPS. Esta versión académica no implementa autenticación ni roles; no es un CRM listo para exponer públicamente.
 
 ## Estructura y responsabilidades
 
 ```text
-app/                          Aplicación Android
-  src/main/java/.../
-    MainActivity.kt           Entrada: inicia ProveedoresApp
-    ui/                       Pantalla, componentes, tema y permiso de red
-    viewmodel/                Estado y coordinación de acciones
-    domain/                   Modelo, validación y contrato de repositorio
-    data/                     Peticiones HTTP y conversión JSON
-  src/main/res/drawable/       Iconos vectoriales
-backend/                      Proyecto Java independiente
-  src/main/java/.../
-    controller/               Endpoints HTTP
-    service/                  Operaciones y transacciones
-    repository/               Acceso mediante Spring Data JPA
-    entity/                   Entidad persistente
-    dto/                      Contratos de entrada/salida
-    exception/                Respuestas de error
-  src/main/resources/
-    application.properties    Configuración del servidor
-    db/migration/             Esquema versionado con Flyway
-scripts/                      Preparación, inicio y verificaciones
-gradle/                       Wrapper y versiones
+app/src/main/java/com/example/contactoproveedores/
+  MainActivity.kt                    Entrada: inicializa Compose y llama a ProveedoresApp
+  di/AppContainer.kt                 Construcción de dependencias
+  domain/
+    model/                           Proveedor, Campo, FiltroEstado y acceso a campos
+    validation/                      Reglas de formulario y normalización de empresa
+    repository/                      Contrato de persistencia y error de operación
+  data/
+    remote/                          Cliente HTTP y serialización JSON
+    repository/                      Implementación del repositorio usando la API
+  viewmodel/
+    ProveedoresViewModel.kt          Coordina carga, registro, edición y estado
+    ProveedoresState.kt              Estado de pantalla y resultados filtrados
+    AccionesProveedores.kt           Eventos que recibe la UI
+    MensajeModal.kt                  Datos de los mensajes
+  ui/
+    ProveedoresApp.kt                Conecta dependencias, ViewModel y pantalla
+    screens/                         Composición del panel
+    navigation/                      Menú y secciones
+    formulario/                      Modal de formulario y componente de campo
+    components/                      Un archivo por componente reutilizable
+    theme/                           Paleta, tipografía y tema
+backend/src/main/java/com/example/proveedores/
+  ProveedoresApplication.java         Entrada Spring Boot
+  controller/                        Rutas HTTP
+  service/                           Operaciones y transacciones
+  repository/                        Consultas JPA y comprobación de duplicados
+  entity/                            Entidad persistente; no depende de DTO ni HTTP
+  dto/                               Contratos de entrada y salida
+  mapper/                            Conversión DTO ↔ entidad
+  validation/                        Normalización de empresa
+  exception/                         Errores de negocio y traducción HTTP
+backend/src/main/resources/
+  application.properties             Configuración por variables de entorno
+  db/migration/                      V1 tabla, V2 unicidad, V3 estado y clave normalizada
+scripts/
+  Preparar-Postgres.ps1               Preparación local
+  Iniciar-Backend.ps1                 Inicio del servidor
+  Verificar.ps1                      Verificaciones
+  common/                            Java y lectura de credenciales compartidos
 ```
 
-MainActivity delega la interfaz. La UI recibe estado y emite acciones; el ViewModel coordina operaciones y el repositorio Android accede a la API.
+El ViewModel depende del contrato del dominio, no del cliente HTTP. Las entidades Java no importan DTO; el mapper hace esa conversión. Los componentes no ejecutan SQL ni peticiones de red. Las funciones privadas relacionadas con una misma responsabilidad permanecen juntas; no se crean capas vacías ni un archivo por cada método trivial.
 
 ## API
 
-| Método | Ruta | Resultado |
+| Método | Ruta | Operación |
 |---|---|---|
-| GET | `/api/proveedores` | Lista del más reciente al más antiguo |
-| GET | `/api/proveedores?busqueda=andina` | Búsqueda sin distinguir mayúsculas |
-| POST | `/api/proveedores` | Guarda y devuelve 201 con el registro |
-| DELETE | `/api/proveedores/{id}` | Elimina y devuelve 204; 404 si no existe |
+| GET | `/api/proveedores` | Lista por ID descendente; parámetros opcionales `busqueda` y `activo` |
+| GET | `/api/proveedores/{id}` | Consulta un registro; 404 si no existe |
+| POST | `/api/proveedores` | Registra; 201 o 409 si existe la empresa |
+| PUT | `/api/proveedores/{id}` | Edita los seis datos; conserva el estado |
+| PUT | `/api/proveedores/{id}/estado` | Cambia estado con `{"activo":false}` o `{"activo":true}` |
+| DELETE | `/api/proveedores/{id}` | Compatibilidad con clientes antiguos: desactiva y devuelve 204; nunca borra |
 
-Ejemplo del cuerpo de un POST:
+POST y PUT de datos reciben:
 
 ```json
 {
@@ -218,36 +222,44 @@ Ejemplo del cuerpo de un POST:
 }
 ```
 
-## Verificar el proyecto
+Los textos obligatorios requieren al menos 2 caracteres; los máximos están definidos en el modelo Android y DTO Java. El teléfono admite de 7 a 15 dígitos, con prefijo `+`, espacios, guiones y paréntesis (máximo 20 caracteres). El correo se verifica por formato, no por existencia real.
 
-Desde PowerShell en la raíz:
+La búsqueda y los filtros Android operan sobre la lista cargada. En la API la búsqueda se ejecuta en la consulta de base de datos. Para directorios grandes, el siguiente paso es paginación y consultas remotas desde Android; actualmente la lista completa se descarga.
+
+## Migraciones y datos existentes
+
+Flyway conserva el esquema versionado. V3 marca como activos los registros anteriores y añade una clave de empresa normalizada indexada para comprobar duplicados sin cargar toda la tabla. PostgreSQL impide duplicados incluso con solicitudes simultáneas.
+
+Si una instalación anterior contiene duplicados, revisa esos datos antes de actualizar; las migraciones no borran ni fusionan registros automáticamente. `ddl-auto=validate` verifica el esquema y no recrea la base al iniciar.
+
+## Verificaciones
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\Verificar.ps1
 ```
 
-Compila Android, ejecuta pruebas unitarias y lint, y prueba la API. El backend usa **H2 aislado para las pruebas**; no modifica los registros de PostgreSQL.
+Compila Android, ejecuta pruebas unitarias y lint, y prueba la API con **H2 aislado**, sin tocar la base real.
 
-Con backend y emulador encendidos, puedes incluir la prueba de interfaz:
+Con backend y emulador activos:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\Verificar.ps1 -ConEmulador
 ```
 
-La prueba de interfaz crea y elimina su propio proveedor.
+La prueba de interfaz registra su propia empresa con prefijo `Proveedor CRM UI`, edita, desactiva, comprueba persistencia, reactiva y vuelve a desactivar. Ese registro queda inactivo para respetar la ausencia de borrado físico en la API. También comprueba el menú y la tabla en horizontal. Las capturas se copian a `/sdcard/crm-*.png` en el emulador; no se publican en Git.
 
-Para verificar persistencia manualmente: agrega un proveedor, cierra app y servidor, vuelve a iniciarlos y busca el registro. Elimínalo y comprueba después de reiniciar que no reaparezca.
+## Problemas frecuentes
 
-## Configuración manual del backend
-
-El servidor admite variables de entorno `DB_URL`, `DB_USER` y `DB_PASSWORD`. Con ellas configuradas y un JDK compatible disponible, ejecuta desde la raíz:
-
-```powershell
-.\gradlew.bat -p backend run
-```
-
-La instalación automatizada es para Windows. En Linux o macOS prepara PostgreSQL y las variables manualmente, y ejecuta `./gradlew -p backend run`.
-
-## Archivos locales excluidos de Git
-
-No se comparten credenciales `.local/`, rutas del SDK `local.properties`, configuración personal del IDE, compilaciones ni temporales. El repositorio no incluye una copia de la base de datos ni contactos reales.
+| Problema | Qué revisar |
+|---|---|
+| Registrar deshabilitado | Inicia el backend, concede permiso de red local y actualiza el panel. Se requiere una carga inicial correcta. |
+| API no responde | Revisa terminal de Spring Boot y servicio PostgreSQL. |
+| Contraseña rechazada | Usa la contraseña de `postgres` elegida en esta PC, no la de Windows. |
+| Credencial no se puede descifrar | Solo funciona en el usuario y equipo que la creó; prepara las credenciales propias. |
+| Puerto 8080 ocupado | No inicies dos instancias del backend. |
+| SDK/Gradle incompatible | Android Studio compatible con AGP 9.4.1, API 37 y JDK configurado. |
+| Emulador `offline` o `Device is already activating` | No pulses Run repetidamente. Detén el dispositivo y usa **Cold Boot** en Device Manager. |
+| Emulador se cierra inesperadamente | Prueba arranque en frío y gráficos **Software** en su configuración. Evita Wipe Data si necesitas conservar datos locales. |
+| Error de ruta temporal Java | Usa una ruta corta y los scripts del proyecto. |
+| No aparecen datos de otra PC | GitHub comparte código; cada instalación tiene su propia base. |
+| Empresa duplicada pero no aparece | Selecciona **Todos**: puede estar inactiva. Edítala o reactívala. |

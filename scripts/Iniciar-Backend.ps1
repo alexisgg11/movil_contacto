@@ -1,22 +1,19 @@
 ﻿$ErrorActionPreference = 'Stop'
 $raizProyecto = Split-Path $PSScriptRoot -Parent
-$archivoSecreto = Join-Path $raizProyecto '.local\db-credential.xml'
-if (!(Test-Path $archivoSecreto)) { throw 'Primero ejecuta scripts\Preparar-Postgres.ps1.' }
-$cred = Import-Clixml -LiteralPath $archivoSecreto
-$env:DB_USER = $cred.UserName
-$env:DB_PASSWORD = $cred.GetNetworkCredential().Password
-$env:DB_URL = 'jdbc:postgresql://127.0.0.1:5432/contacto_proveedores'
-$opcionesJavaAnteriores = $env:JAVA_TOOL_OPTIONS
-$rutaTemporal = Join-Path $raizProyecto '.tmp'
-New-Item -ItemType Directory -Force $rutaTemporal | Out-Null
-$env:JAVA_TOOL_OPTIONS = "$opcionesJavaAnteriores -Djdk.net.unixdomain.tmpdir=`"$rutaTemporal`""
-if (Test-Path 'C:\Program Files\Android\Android Studio\jbr') {
-    $env:JAVA_HOME = 'C:\Program Files\Android\Android Studio\jbr'
-}
+. (Join-Path $PSScriptRoot 'common\Entorno-Java.ps1')
+. (Join-Path $PSScriptRoot 'common\Credenciales-Postgres.ps1')
+$credencial = Get-CredencialPostgres -RaizProyecto $raizProyecto
+$entornoAnterior = Initialize-EntornoJava -RaizProyecto $raizProyecto
+$conexionAnterior = @{ Usuario = $env:DB_USER; Clave = $env:DB_PASSWORD; Url = $env:DB_URL }
+$env:DB_USER = $credencial.UserName
+$env:DB_PASSWORD = $credencial.GetNetworkCredential().Password
+if (!$env:DB_URL) { $env:DB_URL = 'jdbc:postgresql://127.0.0.1:5432/contacto_proveedores' }
 try {
     & (Join-Path $raizProyecto 'gradlew.bat') -p (Join-Path $raizProyecto 'backend') run --console=plain
     if ($LASTEXITCODE -ne 0) { throw 'El servidor no pudo iniciar.' }
 } finally {
-    Remove-Item Env:DB_PASSWORD -ErrorAction SilentlyContinue
-    $env:JAVA_TOOL_OPTIONS = $opcionesJavaAnteriores
+    $env:DB_USER = $conexionAnterior.Usuario
+    $env:DB_PASSWORD = $conexionAnterior.Clave
+    $env:DB_URL = $conexionAnterior.Url
+    Restore-EntornoJava -Anterior $entornoAnterior
 }

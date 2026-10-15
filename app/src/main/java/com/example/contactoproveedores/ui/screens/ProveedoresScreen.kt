@@ -1,89 +1,110 @@
 package com.example.contactoproveedores.ui.screens
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.contactoproveedores.domain.*
+import com.example.contactoproveedores.R
 import com.example.contactoproveedores.ui.components.*
-import com.example.contactoproveedores.ui.theme.ContactoProveedoresTheme
-import com.example.contactoproveedores.viewmodel.ProveedoresState
+import com.example.contactoproveedores.ui.formulario.ModalProveedor
+import com.example.contactoproveedores.ui.navigation.*
+import com.example.contactoproveedores.viewmodel.*
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProveedoresScreen(state: ProveedoresState, editar: (Campo, String) -> Unit,
-    buscar: (String) -> Unit, agregar: () -> Unit, confirmar: (Proveedor?) -> Unit,
-    eliminar: () -> Unit, recargar: () -> Unit, cerrarModal: () -> Unit = {}, buscarConfirmado: () -> Unit = {}) {
-    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Box(Modifier.fillMaxSize().systemBarsPadding().imePadding(), contentAlignment = Alignment.TopCenter) {
-            LazyColumn(Modifier.widthIn(max = 600.dp).fillMaxWidth().fillMaxHeight(), contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                item {
-                    Column(Modifier.padding(bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("CONTACTO / DIRECTORIO", style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary)
-                        Text("Proveedores", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                        Text("Registra y encuentra tus contactos de negocio.", style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+fun ProveedoresScreen(state: ProveedoresState, acciones: AccionesProveedores) {
+    val drawer = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    var seccion by rememberSaveable { mutableStateOf(SeccionPanel.PROVEEDORES) }
+    ModalNavigationDrawer(drawerState = drawer, drawerContent = {
+        MenuPanel(seccion) { seccion = it; scope.launch { drawer.close() } }
+    }) {
+        Scaffold(containerColor = MaterialTheme.colorScheme.background,
+            topBar = {
+                Column {
+                    TopAppBar(title = {
+                        Column {
+                            Text("Contacto", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text("Gestión de proveedores", style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }, navigationIcon = {
+                        IconButton(onClick = { scope.launch { drawer.open() } }) {
+                            Icon(painterResource(R.drawable.ic_menu), "Abrir menú", Modifier.size(22.dp))
+                        }
+                    }, actions = {
+                        IconButton(onClick = acciones.recargar, enabled = !state.ocupado) {
+                            Icon(painterResource(R.drawable.ic_refresh), "Actualizar directorio", Modifier.size(22.dp))
+                        }
+                    }, colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 }
-                item { FormularioProveedor(state.formulario, state.errores, state.ocupado, state.cargado, editar, agregar) }
-                item {
-                    Column(Modifier.padding(top = 24.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        CabeceraDirectorio(state.proveedores.size, state.resultados.size,
-                            state.busqueda, state.ocupado, buscar, recargar, buscarConfirmado)
-                        if (state.ocupado) LinearProgressIndicator(Modifier.fillMaxWidth())
-                        state.aviso?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
-                        state.error?.let {
-                            Surface(color = MaterialTheme.colorScheme.errorContainer,
-                                shape = MaterialTheme.shapes.medium) {
-                                Column(Modifier.padding(16.dp)) {
-                                    Text(it, color = MaterialTheme.colorScheme.onErrorContainer)
-                                    TextButton(onClick = recargar, enabled = !state.ocupado) { Text("Reintentar conexión") }
-                                }
-                            }
+            }) { padding ->
+            BoxWithConstraints(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.TopCenter) {
+                val tabla = maxWidth >= 840.dp
+                LazyColumn(Modifier.widthIn(max = 1200.dp).fillMaxSize(),
+                    contentPadding = PaddingValues(if (tabla) 32.dp else 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    item {
+                        Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(seccion.titulo, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                            Text("Organiza tus contactos y mantén sus datos al día.",
+                                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
-                }
-                if (state.resultados.isEmpty() && !state.ocupado) item {
-                    Column(Modifier.fillMaxWidth().padding(vertical = 28.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(if (state.busqueda.isNotBlank()) "Sin coincidencias" else if (state.cargado)
-                            "Tu directorio comienza aquí" else "Conecta tu directorio",
-                            style = MaterialTheme.typography.titleMedium)
-                        Text(if (state.busqueda.isNotBlank()) "Prueba con otro nombre o rubro."
-                            else if (state.cargado) "Añade tu primer proveedor con el formulario."
-                            else "Inicia el servidor para consultar los proveedores guardados.",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    item { ResumenProveedores(state.proveedores.size, state.activos, state.inactivos) }
+                    if (seccion == SeccionPanel.RESUMEN) {
+                        item {
+                            Column(Modifier.fillMaxWidth().padding(vertical = 20.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text("Tu directorio, bajo control", style = MaterialTheme.typography.titleLarge)
+                                Text("Registra empresas, edita sus datos y cambia su estado sin perder información.")
+                                Button(onClick = { seccion = SeccionPanel.PROVEEDORES }) { Text("Ver proveedores") }
+                            }
+                        }
+                    } else {
+                        item {
+                            Button(onClick = acciones.nuevo, enabled = state.cargado && !state.ocupado,
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp)) {
+                                Text("+  Registrar proveedor")
+                            }
+                        }
+                        item { CabeceraDirectorio(state.busqueda, state.filtro, state.ocupado,
+                            acciones.buscar, acciones.buscarConfirmado, acciones.filtrar) }
+                        item {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("Directorio", style = MaterialTheme.typography.titleSmall)
+                                Text("${state.resultados.size} de ${state.proveedores.size}",
+                                    style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            if (state.ocupado) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 8.dp))
+                            state.aviso?.let { Text(it, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall) }
+                        }
+                        if (state.error != null || (!state.ocupado && state.resultados.isEmpty())) item {
+                            EstadoDirectorio(state.cargado, state.busqueda.isNotBlank() || state.proveedores.isNotEmpty(),
+                                state.error, acciones.recargar)
+                        }
+                        if (tabla && state.resultados.isNotEmpty()) item { CabeceraTablaProveedores() }
+                        items(state.resultados, key = { it.id }) { p ->
+                            TarjetaProveedor(p, state.ocupado, { acciones.abrirEdicion(p) }, { acciones.confirmarEstado(p) }, tabla)
+                        }
                     }
+                    item { Spacer(Modifier.height(12.dp)) }
                 }
-                items(state.resultados, key = { it.id }) { p ->
-                    TarjetaProveedor(p, state.ocupado) { confirmar(p) }
-                }
-                item { Spacer(Modifier.height(24.dp)) }
             }
         }
     }
-    state.eliminar?.let { p ->
-        AlertDialog(onDismissRequest = { if (!state.ocupado) confirmar(null) },
-            title = { Text("¿Eliminar proveedor?") },
-            text = { Text("Se eliminará ${p.empresa} de la base de datos. Esta acción no se puede deshacer.") },
-            confirmButton = { TextButton(onClick = eliminar, enabled = !state.ocupado) { Text("Eliminar") } },
-            dismissButton = { TextButton(onClick = { confirmar(null) }, enabled = !state.ocupado) { Text("Cancelar") } })
-    }
-    state.modal?.let { ModalResultado(it, cerrarModal) }
-}
-@Preview(showBackground = true, widthDp = 420, heightDp = 1000)
-@Composable
-private fun ProveedoresPreview() {
-    ContactoProveedoresTheme(darkTheme = false) {
-        ProveedoresScreen(ProveedoresState(cargado = true, proveedores = listOf(
-            Proveedor(1, "Distribuidora Andina", "Ana Torres", "987654321",
-                "ana@andina.pe", "Av. Primavera 120 · Lima", "Suministros"))),
-            { _, _ -> }, {}, {}, {}, {}, {})
-    }
+    if (state.formularioAbierto) ModalProveedor(state, acciones.editarCampo, acciones.guardar, acciones.cerrarFormulario)
+    state.cambioEstado?.let { ConfirmarEstadoProveedor(it, state.ocupado, acciones.cambiarEstado) { acciones.confirmarEstado(null) } }
+    state.modal?.let { ModalResultado(it, acciones.cerrarModal) }
 }

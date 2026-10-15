@@ -1,4 +1,5 @@
-package com.example.contactoproveedores.domain
+package com.example.contactoproveedores.domain.validation
+import com.example.contactoproveedores.domain.model.*
 object ValidarProveedor {
     fun errores(p: Proveedor): Map<Campo, String> = buildMap {
         Campo.entries.forEach { campo ->
