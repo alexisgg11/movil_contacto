@@ -10,6 +10,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.contactoproveedores.R
@@ -19,7 +21,10 @@ import com.example.contactoproveedores.domain.model.Proveedor
 fun TarjetaProveedor(p: Proveedor, ocupado: Boolean, editar: () -> Unit,
                      cambiarEstado: () -> Unit, tabla: Boolean = false) {
     var expandido by rememberSaveable(p.id) { mutableStateOf(false) }
-    OutlinedCard(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
+    OutlinedCard(onClick = { expandido = !expandido },
+        modifier = Modifier.fillMaxWidth().semantics {
+            stateDescription = if (expandido) "Detalle expandido" else "Detalle contraído"
+        }, shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(16.dp)) {

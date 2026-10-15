@@ -24,14 +24,22 @@ class TarjetaProveedorTest {
             }
         }
         compose.onNodeWithText("987654321").assertDoesNotExist()
-        compose.onNodeWithText("Ver detalle").performClick()
+        compose.onNodeWithText("Proveedor de prueba").performClick()
         compose.onNodeWithText("987654321").assertIsDisplayed()
         restauracion.emulateSavedInstanceStateRestore()
-        compose.onNodeWithText("Ocultar detalle").performClick()
+        compose.onNodeWithText("987654321").assertIsDisplayed()
+        compose.onNodeWithText("Proveedor de prueba").performClick()
         compose.onNodeWithText("987654321").assertDoesNotExist()
         compose.runOnIdle { assertEquals(0, ediciones); assertEquals(0, estados) }
         compose.onNodeWithContentDescription("Editar proveedor").performClick()
         compose.onNodeWithContentDescription("Desactivar proveedor").performClick()
         compose.runOnIdle { assertEquals(1, ediciones); assertEquals(1, estados) }
+        compose.onNodeWithText("987654321").assertDoesNotExist()
+        compose.onNodeWithText("Ver detalle").performClick()
+        compose.onNodeWithText("987654321").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Editar proveedor").performClick()
+        compose.onNodeWithContentDescription("Desactivar proveedor").performClick()
+        compose.runOnIdle { assertEquals(2, ediciones); assertEquals(2, estados) }
+        compose.onNodeWithText("987654321").assertIsDisplayed()
     }
 }

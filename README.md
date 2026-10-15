@@ -8,7 +8,7 @@ Proyecto del curso **Tecnología y Desarrollo Móvil**. Aplicación Android nati
 - Panel con total de proveedores, activos e inactivos.
 - Registro y edición en un modal con seis campos: empresa, contacto, teléfono, correo, dirección y rubro. Rubro es un selector con opciones; si un registro antiguo tiene otro rubro, se conserva como opción actual.
 - Búsqueda con icono de lupa junto al campo, filtros combinables por estado y rubro, y páginas de 5 registros ordenadas por código ascendente.
-- Filas compactas con detalle expandible en celular; tabla desde 840 dp de ancho disponible.
+- Filas compactas con detalle expandible al tocar la tarjeta; un segundo toque lo contrae. Editar y cambiar estado tienen acciones independientes. Tabla desde 840 dp de ancho disponible.
 - Desactivación y reactivación con confirmación. **No se borran los registros desde la API ni desde Android.**
 - Validaciones de campos obligatorios, longitudes, teléfono y correo.
 - Empresas únicas, ignorando mayúsculas y espacios repetidos, incluso si están inactivas.
