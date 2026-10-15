@@ -29,4 +29,16 @@ class PaginacionStateTest {
         assertEquals(0, estado.paginaActual)
         assertEquals(1, estado.totalPaginas)
     }
+    @Test fun combinaRubroEstadoYBusquedaAntesDePaginar() {
+        val proveedores = registros.map { it.copy(rubro = if (it.id % 2L == 0L) "Tecnología" else "SERVICIOS") }
+        val estado = ProveedoresState(proveedores = proveedores, filtroRubro = " Servicios ", pagina = 2)
+        assertEquals(listOf(1L, 3L, 5L, 7L, 9L, 11L), estado.resultados.map { it.id })
+        assertEquals(2, estado.totalPaginas)
+        assertEquals(listOf(11L), estado.proveedoresPagina.map { it.id })
+        val inactivos = estado.copy(filtro = FiltroEstado.INACTIVOS, busqueda = "Empresa 9")
+        assertEquals(listOf(9L), inactivos.proveedoresPagina.map { it.id })
+        assertEquals(0, inactivos.paginaActual)
+        assertTrue(estado.copy(filtroRubro = "Salud").resultados.isEmpty())
+        assertEquals(11, estado.copy(filtroRubro = null).resultados.size)
+    }
 }

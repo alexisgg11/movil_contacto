@@ -9,6 +9,7 @@ data class ProveedoresState(
     val errores: Map<Campo, String> = emptyMap(),
     val busqueda: String = "",
     val filtro: FiltroEstado = FiltroEstado.TODOS,
+    val filtroRubro: String? = null,
     val pagina: Int = 0,
     val tamanioPagina: Int = 5,
     val ocupado: Boolean = false,
@@ -21,7 +22,8 @@ data class ProveedoresState(
     val activos get() = proveedores.count { it.activo }
     val inactivos get() = proveedores.size - activos
     val resultados get() = proveedores.filter { p ->
-        filtro.acepta(p) && listOf(p.empresa, p.contacto, p.telefono, p.correo, p.direccion, p.rubro)
+        filtro.acepta(p) && (filtroRubro == null || p.rubro.trim().equals(filtroRubro.trim(), ignoreCase = true)) &&
+            listOf(p.empresa, p.contacto, p.telefono, p.correo, p.direccion, p.rubro)
             .any { it.contains(busqueda.trim(), ignoreCase = true) }
     }.sortedBy { it.id }
     val totalPaginas get() = maxOf(1, (resultados.size + tamanioPagina - 1) / tamanioPagina)

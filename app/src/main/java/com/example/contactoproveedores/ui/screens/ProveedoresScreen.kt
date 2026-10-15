@@ -81,6 +81,8 @@ fun ProveedoresScreen(state: ProveedoresState, acciones: AccionesProveedores) {
                         }
                         item { CabeceraDirectorio(state.busqueda, state.filtro, state.ocupado,
                             acciones.buscar, acciones.buscarConfirmado, acciones.filtrar) }
+                        item { FiltroRubroProveedor(state.filtroRubro, state.proveedores.map { it.rubro },
+                            state.ocupado, acciones.filtrarRubro) }
                         item {
                             Text("Directorio", style = MaterialTheme.typography.titleSmall)
                             if (state.ocupado) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 8.dp))

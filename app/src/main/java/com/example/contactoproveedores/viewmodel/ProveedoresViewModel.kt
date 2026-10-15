@@ -33,6 +33,7 @@ class ProveedoresViewModel(private val repository: ProveedorRepository) : ViewMo
     } }
     fun buscar(texto: String) { mutable.update { it.copy(busqueda = texto, pagina = 0) } }
     fun filtrar(filtro: FiltroEstado) { mutable.update { it.copy(filtro = filtro, pagina = 0) } }
+    fun filtrarRubro(rubro: String?) { mutable.update { it.copy(filtroRubro = rubro, pagina = 0) } }
     fun cambiarPagina(pagina: Int) { mutable.update { it.copy(pagina = pagina.coerceIn(0, it.totalPaginas - 1)) } }
     fun cerrarModal() { mutable.update { it.copy(modal = null) } }
     fun confirmarEstado(p: Proveedor?) { if (!state.value.ocupado) mutable.update { it.copy(cambioEstado = p) } }
@@ -76,6 +77,7 @@ class ProveedoresViewModel(private val repository: ProveedorRepository) : ViewMo
                 pagina = if (p.id == 0L) it.proveedores.size / it.tamanioPagina else it.paginaActual,
                 busqueda = if (p.id == 0L) "" else it.busqueda,
                 filtro = if (p.id == 0L) FiltroEstado.TODOS else it.filtro,
+                filtroRubro = if (p.id == 0L) null else it.filtroRubro,
                 aviso = if (p.id == 0L) "Proveedor registrado" else "Proveedor actualizado",
                 modal = MensajeModal(if (p.id == 0L) "Registro exitoso" else "Cambios guardados",
                     "${guardado.empresa} se guardó correctamente.")) }

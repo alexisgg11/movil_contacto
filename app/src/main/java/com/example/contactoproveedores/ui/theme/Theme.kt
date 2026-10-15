@@ -7,6 +7,9 @@ import androidx.compose.ui.graphics.Color
 private val Light = lightColorScheme(
     primary = VerdeContacto, onPrimary = Color.White,
     background = FondoPanel, surface = Color.White,
+    surfaceContainerLowest = Color.White, surfaceContainerLow = Color.White,
+    surfaceContainer = Color.White, surfaceContainerHigh = Color.White,
+    surfaceContainerHighest = Color.White, surfaceTint = Color.Transparent,
     onSurface = TextoPrincipal, onBackground = TextoPrincipal,
     onSurfaceVariant = TextoSecundario, surfaceVariant = Color(0xFFF0F3F5),
     outline = Color(0xFFAAB4BC), outlineVariant = BordePanel,

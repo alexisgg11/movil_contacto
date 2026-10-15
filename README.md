@@ -7,7 +7,7 @@ Proyecto del curso **Tecnología y Desarrollo Móvil**. Aplicación Android nati
 - Menú con **Resumen** y **Proveedores**.
 - Panel con total de proveedores, activos e inactivos.
 - Registro y edición en un modal con seis campos: empresa, contacto, teléfono, correo, dirección y rubro. Rubro es un selector con opciones; si un registro antiguo tiene otro rubro, se conserva como opción actual.
-- Búsqueda con icono de lupa junto al campo, filtros por estado y páginas de 5 registros ordenadas por código ascendente.
+- Búsqueda con icono de lupa junto al campo, filtros combinables por estado y rubro, y páginas de 5 registros ordenadas por código ascendente.
 - Filas compactas con detalle expandible en celular; tabla desde 840 dp de ancho disponible.
 - Desactivación y reactivación con confirmación. **No se borran los registros desde la API ni desde Android.**
 - Validaciones de campos obligatorios, longitudes, teléfono y correo.
@@ -258,7 +258,7 @@ En esta tabla, la base de todas las rutas es **`app/src/main/java/com/example/co
 | `MainActivity.kt` | Entrada Android; `onCreate()` activa Compose y llama a `ProveedoresApp()`. Mantenerla pequeña. |
 | `ui/ProveedoresApp.kt` | Aplica el tema, obtiene el ViewModel, observa el estado y conecta sus métodos con las acciones de pantalla. |
 | `di/AppContainer.kt` | Construye y conecta cliente HTTP y repositorio. Cambiar aquí una implementación de persistencia. |
-| `viewmodel/ProveedoresViewModel.kt` | Lógica de interacción: `nuevo()`, `abrirEdicion()`, `cerrarFormulario()`, `editar()`, `guardar()`, `cargar()`, `buscar()`, `buscarConfirmado()`, `filtrar()`, `cambiarPagina()`, `confirmarEstado()`, `cambiarEstado()` y `cerrarModal()`. `operar()` centraliza ejecución asíncrona, carga y errores. |
+| `viewmodel/ProveedoresViewModel.kt` | Lógica de interacción: `nuevo()`, `abrirEdicion()`, `cerrarFormulario()`, `editar()`, `guardar()`, `cargar()`, `buscar()`, `buscarConfirmado()`, `filtrar()`, `filtrarRubro()`, `cambiarPagina()`, `confirmarEstado()`, `cambiarEstado()` y `cerrarModal()`. `operar()` centraliza ejecución asíncrona, carga y errores. |
 | `viewmodel/ProveedoresState.kt` | Datos actuales de pantalla: formulario, lista, errores, filtros, página y modales. `resultados` filtra y ordena; `proveedoresPagina` recorta la página. Cambiar `tamanioPagina` para ajustar los 5 registros actuales. |
 | `viewmodel/AccionesProveedores.kt` | Agrupa callbacks de la pantalla. Añadir aquí una acción que la UI necesite comunicar al ViewModel y conectarla en `ProveedoresApp.kt`. |
 | `viewmodel/MensajeModal.kt` | Modelo del título y contenido de mensajes; el diseño del diálogo vive en `ModalResultado.kt`. |
@@ -282,7 +282,7 @@ Las siguientes rutas parten de **`app/src/main/java/com/example/contactoproveedo
 | Archivo dentro de `ui/` | Qué controla |
 |---|---|
 | `theme/Color.kt` | Colores compartidos como `VerdeContacto`, `FondoPanel`, `TextoPrincipal`, `TextoSecundario`, `BordePanel` y `VerdeSuave`. |
-| `theme/Theme.kt` | Asigna colores a los roles Material (`primary`, `surface`, etc.) y define los temas claro/oscuro. Algunos colores específicos se definen directamente aquí: revisar ambos temas al cambiar la paleta. |
+| `theme/Theme.kt` | Asigna colores a los roles Material (`primary`, `surface`, etc.) y define los temas claro/oscuro. En el tema claro los roles `surfaceContainer*` son blancos y no se aplica tinte de superficie, para menús y modales blancos. Algunos colores específicos se definen directamente aquí: revisar ambos temas al cambiar la paleta. |
 | `theme/Type.kt` | Tipografía global: familia, tamaño, peso y altura de línea. Los estilos no redefinidos usan los valores de Material 3. |
 | `screens/ProveedoresScreen.kt` | Orden general del panel, barra superior, botón de registro, lista y distribución adaptable. Aquí se decide usar tabla con ancho disponible de al menos `840.dp` y se invocan los componentes. El título Directorio no muestra un contador adicional. |
 | `navigation/MenuPanel.kt` | Apariencia del menú lateral y sus opciones. |
@@ -291,6 +291,7 @@ Las siguientes rutas parten de **`app/src/main/java/com/example/contactoproveedo
 | `formulario/CampoFormularioProveedor.kt` | Diseño de cada caja de texto, teclado y presentación del error. |
 | `formulario/SelectorRubroProveedor.kt` | Desplegable de rubros, selección y presentación del error. Sus opciones vienen de `RubroProveedor.kt`. |
 | `components/CabeceraDirectorio.kt` | Campo de búsqueda, lupa y controles de filtro. La lógica que responde a ellos está en el ViewModel. |
+| `components/FiltroRubroProveedor.kt` | Selector del directorio: Todos los rubros, catálogo de `RubroProveedor` y valores antiguos registrados, sin repetir opciones por mayúsculas. Emite la selección al ViewModel; no consulta la base. |
 | `components/ResumenProveedores.kt` | Indicadores Total/Activos/Inactivos; recibe los números ya calculados. |
 | `components/TarjetaProveedor.kt` | Estructura de la tarjeta/fila, código visible y apertura del detalle. Aquí se cambia la presentación del código, sin modificar el ID real en la base. |
 | `components/InicialesEmpresa.kt` | Círculo con iniciales del nombre de empresa. |
@@ -437,7 +438,7 @@ POST y PUT de datos reciben:
 
 Los textos obligatorios requieren al menos 2 caracteres; los máximos están definidos en el modelo Android y DTO Java. El teléfono admite de 7 a 15 dígitos, con prefijo `+`, espacios, guiones y paréntesis (máximo 20 caracteres). El correo se verifica por formato, no por existencia real.
 
-La búsqueda, los filtros y la paginación Android operan sobre la lista cargada. El panel muestra 5 proveedores por página, ordenados por código ascendente; buscar o cambiar el filtro vuelve a la primera página. Registrar abre la página donde quedó el nuevo proveedor. En la API la búsqueda se ejecuta en la base de datos. Para directorios grandes, el siguiente paso es paginación del servidor y consultas remotas: actualmente Android descarga la lista completa.
+La búsqueda, los filtros y la paginación Android operan sobre la lista cargada. El selector **Filtrar por rubro** permite elegir, por ejemplo, Servicios, Tecnología o Suministros; **Todos los rubros** elimina esa restricción. Se combina con texto y estado antes de dividir los resultados en páginas. El panel muestra 5 proveedores por página, ordenados por código ascendente; buscar o cambiar cualquier filtro vuelve a la primera página. Registrar limpia los filtros y abre la página donde quedó el nuevo proveedor. En la API la búsqueda se ejecuta en la base de datos. Para directorios grandes, el siguiente paso es paginación del servidor y consultas remotas: actualmente Android descarga la lista completa.
 
 ## Migraciones y datos existentes
 
