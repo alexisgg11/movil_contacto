@@ -82,11 +82,7 @@ fun ProveedoresScreen(state: ProveedoresState, acciones: AccionesProveedores) {
                         item { CabeceraDirectorio(state.busqueda, state.filtro, state.ocupado,
                             acciones.buscar, acciones.buscarConfirmado, acciones.filtrar) }
                         item {
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("Directorio", style = MaterialTheme.typography.titleSmall)
-                                Text("${state.resultados.size} de ${state.proveedores.size}",
-                                    style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
+                            Text("Directorio", style = MaterialTheme.typography.titleSmall)
                             if (state.ocupado) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 8.dp))
                             state.aviso?.let { Text(it, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall) }
                         }

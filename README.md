@@ -195,7 +195,7 @@ app/src/main/java/com/example/contactoproveedores/
   MainActivity.kt                    Entrada: inicializa Compose y llama a ProveedoresApp
   di/AppContainer.kt                 Construcción de dependencias
   domain/
-    model/                           Proveedor, Campo, FiltroEstado y acceso a campos
+    model/                           Proveedor, Campo, RubroProveedor, FiltroEstado y acceso a campos
     validation/                      Reglas de formulario y normalización de empresa
     repository/                      Contrato de persistencia y error de operación
   data/
@@ -230,10 +230,177 @@ scripts/
   Preparar-Postgres.ps1               Preparación local
   Iniciar-Backend.ps1                 Inicio del servidor
   Verificar.ps1                      Verificaciones
-  common/                            Preparación de Java compartida por los scripts
+  Cargar-Demo.ps1                    Carga opcional de proveedores ficticios
+  datos/                             Ejemplos JSON
+  common/                            Entorno Java y lectura/escritura JSON compartidos
 ```
 
 El ViewModel depende del contrato del dominio, no del cliente HTTP. Las entidades Java no importan DTO; el mapper hace esa conversión. Los componentes no ejecutan SQL ni peticiones de red. Las funciones privadas relacionadas con una misma responsabilidad permanecen juntas; no se crean capas vacías ni un archivo por cada método trivial.
+
+## Guía para modificar el proyecto
+
+Las rutas de esta sección son relativas a la raíz del repositorio: funcionan aunque cada compañero lo clone en otra ubicación. En Android Studio cambia la vista **Android → Project** para recorrer la estructura real. `Ctrl+Shift+N` permite buscar un archivo por su nombre.
+
+### Qué significa cada capa
+
+La **vista** es `ui/`: funciones `@Composable` que dibujan la pantalla con los datos recibidos. En Compose un componente se escribe en Kotlin, en lugar de combinar HTML y CSS. `Modifier` configura tamaño, márgenes y distribución; `Row`, `Column` y `Box` organizan el contenido. Los tamaños de distribución usan `dp` y el texto usa `sp`.
+
+El **ViewModel** recibe las acciones de la vista, valida y coordina operaciones. Su estado observable se convierte en lo que muestra Compose; al cambiar ese estado, Compose actualiza la interfaz. El **dominio** contiene modelos, reglas y el contrato del repositorio. La capa **data** implementa ese contrato mediante HTTP y JSON. El backend tiene sus propias capas: controlador HTTP, servicio de negocio, repositorio JPA y entidad de PostgreSQL.
+
+No hay una carpeta llamada `view`: esa responsabilidad corresponde a `ui`. Tampoco hay una entidad PostgreSQL dentro de Android: `Proveedor.kt` es el modelo móvil y `Proveedor.java` es la entidad persistente del servidor. Sus repositorios tienen el mismo nombre, pero son contratos diferentes para cada aplicación.
+
+### Android: rutas de entrada, datos y lógica
+
+En esta tabla, la base de todas las rutas es **`app/src/main/java/com/example/contactoproveedores/`**.
+
+| Archivo dentro de esa base | Responsabilidad y qué modificar aquí |
+|---|---|
+| `MainActivity.kt` | Entrada Android; `onCreate()` activa Compose y llama a `ProveedoresApp()`. Mantenerla pequeña. |
+| `ui/ProveedoresApp.kt` | Aplica el tema, obtiene el ViewModel, observa el estado y conecta sus métodos con las acciones de pantalla. |
+| `di/AppContainer.kt` | Construye y conecta cliente HTTP y repositorio. Cambiar aquí una implementación de persistencia. |
+| `viewmodel/ProveedoresViewModel.kt` | Lógica de interacción: `nuevo()`, `abrirEdicion()`, `cerrarFormulario()`, `editar()`, `guardar()`, `cargar()`, `buscar()`, `buscarConfirmado()`, `filtrar()`, `cambiarPagina()`, `confirmarEstado()`, `cambiarEstado()` y `cerrarModal()`. `operar()` centraliza ejecución asíncrona, carga y errores. |
+| `viewmodel/ProveedoresState.kt` | Datos actuales de pantalla: formulario, lista, errores, filtros, página y modales. `resultados` filtra y ordena; `proveedoresPagina` recorta la página. Cambiar `tamanioPagina` para ajustar los 5 registros actuales. |
+| `viewmodel/AccionesProveedores.kt` | Agrupa callbacks de la pantalla. Añadir aquí una acción que la UI necesite comunicar al ViewModel y conectarla en `ProveedoresApp.kt`. |
+| `viewmodel/MensajeModal.kt` | Modelo del título y contenido de mensajes; el diseño del diálogo vive en `ModalResultado.kt`. |
+| `domain/model/Proveedor.kt` | Modelo de datos móvil y `normalizado()` para recortar espacios. No guarda directamente en la base. |
+| `domain/model/Campo.kt` | Campos del formulario, etiquetas y longitudes máximas. |
+| `domain/model/CamposProveedor.kt` | `valor()` y `actualizar()`: acceso al dato correspondiente a cada `Campo`. |
+| `domain/model/RubroProveedor.kt` | Catálogo de opciones del selector de rubros. El servidor actualmente acepta rubro como texto; este catálogo no es una restricción de PostgreSQL. |
+| `domain/model/FiltroEstado.kt` | Opciones Todos/Activos/Inactivos y regla `acepta()`. |
+| `domain/validation/ValidarProveedor.kt` | `errores()`: reglas del formulario y mensajes por campo. |
+| `domain/validation/NormalizarEmpresa.kt` | `clave()`: normaliza empresa para comparar duplicados. Mantenerla coherente con la normalización del backend. |
+| `domain/repository/ProveedorRepository.kt` | Interfaz de operaciones `listar()`, `agregar()`, `actualizar()` y `cambiarEstado()`; no contiene HTTP. |
+| `domain/repository/ErrorProveedor.kt` | Error de operación con mensaje y código HTTP opcional. |
+| `data/repository/ApiProveedorRepository.kt` | Implementación móvil: elige métodos y rutas HTTP para cada operación. |
+| `data/remote/ClienteHttp.kt` | `solicitar()`: conexión, tiempos de espera, cabeceras, envío y lectura. Usa `Dispatchers.IO` para no bloquear la interfaz. |
+| `data/remote/ProveedorJson.kt` | Convierte entre JSON y el modelo móvil. Actualizarlo si cambia el contrato de datos de la API. |
+
+### Android: dónde cambiar cada parte visual
+
+Las siguientes rutas parten de **`app/src/main/java/com/example/contactoproveedores/ui/`**. Cada componente de la tabla tiene su propio archivo; para modificar su estructura abre ese archivo y edita su función `@Composable`.
+
+| Archivo dentro de `ui/` | Qué controla |
+|---|---|
+| `theme/Color.kt` | Colores compartidos como `VerdeContacto`, `FondoPanel`, `TextoPrincipal`, `TextoSecundario`, `BordePanel` y `VerdeSuave`. |
+| `theme/Theme.kt` | Asigna colores a los roles Material (`primary`, `surface`, etc.) y define los temas claro/oscuro. Algunos colores específicos se definen directamente aquí: revisar ambos temas al cambiar la paleta. |
+| `theme/Type.kt` | Tipografía global: familia, tamaño, peso y altura de línea. Los estilos no redefinidos usan los valores de Material 3. |
+| `screens/ProveedoresScreen.kt` | Orden general del panel, barra superior, botón de registro, lista y distribución adaptable. Aquí se decide usar tabla con ancho disponible de al menos `840.dp` y se invocan los componentes. El título Directorio no muestra un contador adicional. |
+| `navigation/MenuPanel.kt` | Apariencia del menú lateral y sus opciones. |
+| `navigation/SeccionPanel.kt` | Secciones disponibles y sus títulos; su contenido se selecciona en `ProveedoresScreen.kt`. |
+| `formulario/ModalProveedor.kt` | Estructura del modal nuevo/editar: campos, zona desplazable y botones Guardar/Cancelar. |
+| `formulario/CampoFormularioProveedor.kt` | Diseño de cada caja de texto, teclado y presentación del error. |
+| `formulario/SelectorRubroProveedor.kt` | Desplegable de rubros, selección y presentación del error. Sus opciones vienen de `RubroProveedor.kt`. |
+| `components/CabeceraDirectorio.kt` | Campo de búsqueda, lupa y controles de filtro. La lógica que responde a ellos está en el ViewModel. |
+| `components/ResumenProveedores.kt` | Indicadores Total/Activos/Inactivos; recibe los números ya calculados. |
+| `components/TarjetaProveedor.kt` | Estructura de la tarjeta/fila, código visible y apertura del detalle. Aquí se cambia la presentación del código, sin modificar el ID real en la base. |
+| `components/InicialesEmpresa.kt` | Círculo con iniciales del nombre de empresa. |
+| `components/EtiquetaEstado.kt` | Insignia Activo/Inactivo y sus colores. |
+| `components/AccionesFilaProveedor.kt` | Iconos de editar y desactivar/reactivar; emite acciones, no guarda datos. |
+| `components/DetalleProveedor.kt` | Datos mostrados al expandir: teléfono, correo y dirección. |
+| `components/DatoContacto.kt` | Distribución de una fila de detalle: icono, etiqueta y valor. |
+| `components/CabeceraTablaProveedores.kt` | Títulos y distribución de columnas en pantallas anchas. Mantener alineados sus anchos con la fila de `TarjetaProveedor.kt`. |
+| `components/PaginacionProveedores.kt` | Flechas, texto de página y rango de registros. Los cálculos y la selección de registros están en `ProveedoresState.kt`. |
+| `components/ConfirmarEstadoProveedor.kt` | Modal de confirmación antes de cambiar estado. |
+| `components/ModalResultado.kt` | Diseño del modal de éxito/error/validación. El ViewModel establece sus mensajes. |
+| `components/EstadoDirectorio.kt` | Mensajes de lista vacía, búsqueda sin coincidencias o error de carga. |
+| `components/PermisoRedLocal.kt` | Solicitud del permiso de acceso a red local según la versión Android. |
+
+Los iconos vectoriales están en **`app/src/main/res/drawable/ic_*.xml`** y se usan con `painterResource`. El tema visual se aplica con `MaterialTheme.colorScheme` y `MaterialTheme.typography`; los márgenes y formas específicos de una tarjeta o modal se cambian en ese componente. No hay una hoja CSS. Los textos visibles están actualmente en las funciones Kotlin; si se añade traducción, se deben extraer a recursos `res/values/strings.xml`.
+
+### Backend Java: rutas y responsabilidades
+
+La base de estas rutas es **`backend/src/main/java/com/example/proveedores/`**.
+
+| Archivo dentro de esa base | Responsabilidad y qué modificar aquí |
+|---|---|
+| `ProveedoresApplication.java` | `main()` inicia Spring Boot. No añadir reglas de negocio aquí. |
+| `controller/ProveedorController.java` | Rutas y métodos GET/POST/PUT/DELETE, recepción de DTO con `@Valid` y códigos de respuesta. Delega en el servicio. |
+| `service/ProveedorService.java` | Reglas y transacciones: `listar()`, `obtener()`, `agregar()`, `actualizar()` y `cambiarEstado()`. `encontrar()` resuelve ausencia y `comprobarDuplicado()` comprueba empresa única excluyendo el propio ID. |
+| `repository/ProveedorRepository.java` | Consultas JPA: `buscar()` y `existsByEmpresaClaveAndIdNot()`, además de las operaciones heredadas de `JpaRepository`. No contiene elementos de interfaz. |
+| `entity/Proveedor.java` | Entidad, columnas y estado persistente. `actualizar()` modifica datos y `cambiarEstado()` modifica el estado. Cambiar una columna requiere también una migración SQL. |
+| `dto/ProveedorRequest.java` | Datos de registro/edición, limpieza de entrada y validaciones del servidor mediante anotaciones. |
+| `dto/ProveedorResponse.java` | Campos devueltos al cliente. No exponer información interna o credenciales aquí. |
+| `dto/EstadoProveedorRequest.java` | Contrato y validación de la petición de cambio de estado. |
+| `mapper/ProveedorMapper.java` | `crear()`, `actualizar()` y `respuesta()` convierten entre DTO y entidad. |
+| `validation/NormalizarEmpresa.java` | `clave()` normaliza la empresa para su unicidad. |
+| `exception/ProveedorDuplicadoException.java` | Error de negocio de empresa duplicada. |
+| `exception/ProveedorNoEncontradoException.java` | Error de negocio cuando no existe un ID. |
+| `exception/ApiExceptionHandler.java` | Convierte errores de validación, duplicidad, ausencia, integridad y JSON inválido en respuestas HTTP con mensaje. |
+
+El esquema está en **`backend/src/main/resources/db/migration/`**: `V1__crear_proveedores.sql`, `V2__empresa_unica.sql` y `V3__estado_y_clave_empresa.sql`. Para cambiar una base que ya ha ejecutado esas versiones, añadir una **nueva migración V4, V5, etc.**; no editar migraciones aplicadas, porque Flyway verifica su historial.
+
+### Configuración, dependencias y scripts
+
+| Ruta desde la raíz | Para qué sirve / cuándo editarla |
+|---|---|
+| `.env` | Credenciales reales y puerto de cada equipo; privado, ignorado por Git. No existe en un clon nuevo hasta crearlo. |
+| `.env.example` | Plantilla pública sin secretos; actualizarla si se añaden variables requeridas. |
+| `.gitignore` | Exclusiones de secretos, configuración local y archivos generados. |
+| `backend/src/main/resources/application.properties` | Importación de `.env`, conexión por variables, Flyway y comportamiento JPA. |
+| `app/build.gradle.kts` | SDK, versión Android, dependencias del módulo y lectura de `API_BASE_URL` para generar `BuildConfig`. La URL es configuración de conexión, no una contraseña. |
+| `gradle/libs.versions.toml` | Catálogo de versiones y bibliotecas Android. |
+| `build.gradle.kts` / `settings.gradle.kts` | Plugins y configuración raíz Android. |
+| `backend/build.gradle.kts` / `backend/settings.gradle.kts` | Dependencias Java/Spring Boot, pruebas y tarea `run` del backend independiente. |
+| `gradle/wrapper/gradle-wrapper.properties` | Versión Gradle del Wrapper; los archivos `gradlew`/`gradlew.bat` lo ejecutan. |
+| `gradle/gradle-daemon-jvm.properties` | Requisitos de Java del daemon Gradle Android. |
+| `gradle.properties` | Opciones compartidas de construcción; nunca guardar contraseñas. Para una URL personal usar el archivo Gradle del usuario descrito en Teléfono físico. |
+| `local.properties` | Ruta del SDK en cada máquina; generado localmente e ignorado por Git. |
+| `app/src/main/AndroidManifest.xml` | Declaración de aplicación, actividad y permisos Android. |
+| `app/src/debug/AndroidManifest.xml` | Permiso de HTTP para desarrollo debug. |
+| `app/src/main/res/values/strings.xml` | Recursos de texto Android, como el nombre de la aplicación; los textos del panel aún están en Compose. |
+| `app/src/main/res/values/themes.xml` / `colors.xml` | Tema y recursos Android de la plantilla. Para los colores del panel Compose usar `ui/theme/`, no cambiar solamente estos XML. |
+| `app/src/main/res/mipmap-*/` | Iconos de lanzamiento de la app, en diferentes densidades. |
+| `app/src/main/res/xml/backup_rules.xml` / `data_extraction_rules.xml` | Reglas de copia de seguridad y transferencia de datos Android; no configuran PostgreSQL. |
+| `scripts/Preparar-Postgres.ps1` | Preparación opcional de usuario/base y `.env`. |
+| `scripts/Iniciar-Backend.ps1` | Atajo opcional para preparar Java e iniciar el backend. |
+| `scripts/Verificar.ps1` | Agrupa compilación, lint y pruebas. |
+| `scripts/Cargar-Demo.ps1` | Carga opcional de ejemplos a través de la API sin repetir empresas existentes. |
+| `scripts/datos/proveedores-demo.json` | Datos ficticios que consume el cargador. |
+| `scripts/common/Entorno-Java.ps1` | Funciones compartidas para preparar/restaurar el entorno Java de los scripts. |
+| `scripts/common/Api-Json.ps1` | Envío/lectura UTF-8 de JSON para el cargador, compatible con Windows PowerShell. |
+
+`build/`, `.gradle/`, `.kotlin/` y `.tmp/` contienen productos generados, cachés o comprobaciones locales; no son capas del proyecto ni se usan para escribir funcionalidades. `.idea/` guarda preferencias del IDE. `.local/` solo puede contener el respaldo local antiguo mencionado en credenciales; ya no configura el backend.
+
+### Recorrido de una operación: Guardar proveedor
+
+1. `ModalProveedor` recibe el clic de Guardar y llama al callback recibido.
+2. `AccionesProveedores`, conectado en `ProveedoresApp`, dirige la acción a `ProveedoresViewModel.guardar()`.
+3. El ViewModel normaliza, llama a `ValidarProveedor.errores()` y revisa duplicados en los datos cargados. Si falla, actualiza errores y mensaje del modal.
+4. Si es válido, utiliza `ProveedorRepository.agregar()` o `actualizar()`. La implementación `ApiProveedorRepository` serializa con `ProveedorJson` y utiliza `ClienteHttp`.
+5. `ProveedorController` recibe JSON, valida `ProveedorRequest` y llama a `ProveedorService`. El servidor vuelve a comprobar reglas: no confía únicamente en Android.
+6. El servicio usa el mapper y el repositorio JPA; PostgreSQL guarda el registro dentro de una transacción y aplica su restricción de unicidad.
+7. La respuesta vuelve por el mismo camino. El ViewModel actualiza su lista con el resultado confirmado, cierra el formulario y muestra éxito; Compose vuelve a dibujar a partir del estado. Ante un error, se muestra el mensaje correspondiente.
+
+Para cambiar únicamente el diseño de Guardar, editar el modal; para cambiar qué ocurre al pulsarlo, editar el ViewModel; para cambiar una regla obligatoria para cualquier cliente, editar el backend y mantener coherente la validación móvil.
+
+### Ejemplos de cambios frecuentes
+
+| Quiero… | Archivos que debo revisar |
+|---|---|
+| Cambiar el verde de botones | `ui/theme/Color.kt` y su asignación `primary` en `ui/theme/Theme.kt`. |
+| Aumentar el texto o separación de una tarjeta | `ui/components/TarjetaProveedor.kt`; para estilos globales, `ui/theme/Type.kt`. |
+| Añadir una opción de rubro | `domain/model/RubroProveedor.kt`. Si se requiere un catálogo obligatorio también en la API, añadir y validar esa regla en el backend. |
+| Mostrar otro dato al expandir | `ui/components/DetalleProveedor.kt` y `DatoContacto.kt`; comprobar que el modelo y la API ya lo proporcionen. |
+| Cambiar número de filas o su orden | `viewmodel/ProveedoresState.kt`; para apariencia de controles, `ui/components/PaginacionProveedores.kt`. |
+| Cambiar cuándo aparece “Proveedor no encontrado” | `viewmodel/ProveedoresViewModel.kt`, método `buscarConfirmado()`; para el estado vacío en pantalla, `EstadoDirectorio.kt`. |
+| Cambiar reglas del teléfono | `domain/validation/ValidarProveedor.kt`, límites en `domain/model/Campo.kt` y validaciones de `dto/ProveedorRequest.java` en el backend. |
+| Añadir un campo persistente, por ejemplo RUC | Nueva migración SQL + entidad Java + DTO de entrada/salida + mapper; después modelo Kotlin + `Campo`/`CamposProveedor` + validaciones + JSON + formulario y detalle. Actualizar contratos y pruebas en ambos lados. |
+| Añadir una operación de negocio | Servicio/controlador/repositorio Java según corresponda; contrato de repositorio móvil, implementación HTTP, ViewModel, callback y componente que la activa. |
+
+### Dónde están las pruebas
+
+| Ruta | Qué comprueba |
+|---|---|
+| `app/src/test/java/com/example/contactoproveedores/ValidarProveedorTest.kt` | Reglas del formulario. |
+| `app/src/test/java/com/example/contactoproveedores/PaginacionStateTest.kt` | Filtrado, orden y distribución por páginas en el estado. |
+| `app/src/androidTest/java/com/example/contactoproveedores/ProveedorFlujoTest.kt` | Flujo de registro/edición/estado y búsqueda en emulador con API activa. |
+| `app/src/androidTest/java/com/example/contactoproveedores/PanelAdaptativoTest.kt` | Menú y presentación de tabla en ancho suficiente. |
+| `app/src/androidTest/java/com/example/contactoproveedores/TarjetaProveedorTest.kt` | Expansión y acciones de tarjeta. |
+| `app/src/androidTest/java/com/example/contactoproveedores/PaginacionProveedoresTest.kt` | Interacción y límites de los controles de páginas. |
+| `app/src/androidTest/java/com/example/contactoproveedores/testutil/CapturaPantalla.kt` | Utilidad de capturas para pruebas de interfaz. |
+| `backend/src/test/java/com/example/proveedores/ProveedorApiTest.java` | API, validación, duplicados, edición y estado con base H2 aislada. |
+
+Al cambiar reglas, contratos o comportamiento, actualizar las pruebas correspondientes. Mantener las consultas y credenciales en el backend, la lógica de interacción en el ViewModel y los componentes dedicados a presentar datos y emitir acciones.
 
 ## API
 
