@@ -66,33 +66,63 @@ En Android Studio:
 
 Android Studio genera `local.properties` con la ruta del SDK de tu propia PC. Ese archivo no se comparte.
 
-### 3. Preparar PostgreSQL: una sola vez por equipo
+### 3. Preparar PostgreSQL y tus credenciales
 
-Comprueba que el servicio PostgreSQL esté iniciado en **Servicios** de Windows. En PowerShell, desde la raíz:
+El servicio PostgreSQL debe estar iniciado. Hay dos opciones; elige una.
+
+**Opción A: preparación automática en Windows (script opcional).** Para una instalación nueva, sin `.env` ni base creados:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\Preparar-Postgres.ps1
 ```
 
-Escribe la contraseña de **postgres** elegida al instalar PostgreSQL. La entrada es oculta; no aparecen caracteres mientras escribes.
+Introduce la contraseña del administrador `postgres`. El script crea la base `contacto_proveedores`, el usuario dedicado `contacto_app` y un **`.env` en la raíz**, con contraseña aleatoria. No tienes que copiar la plantilla si eliges esta opción. El script no sobrescribe un `.env` existente ni reutiliza bases o usuarios existentes automáticamente.
 
-El script crea la base `contacto_proveedores`, el usuario `contacto_app` y una contraseña aleatoria cifrada en `.local/db-credential.xml`. Espera el mensaje **«Base contacto_proveedores creada»**.
+La ruta de `psql.exe` predeterminada es `C:\Program Files\PostgreSQL\18\bin\psql.exe`; ajusta `$psql` en el script si tu instalación es diferente.
 
-La ruta predeterminada de `psql.exe` es `C:\Program Files\PostgreSQL\18\bin\psql.exe`. Si tu instalación es distinta, ajusta `$psql` en el script.
+**Opción B: configuración manual sin scripts.** Crea en pgAdmin una base `contacto_proveedores` con un usuario que tenga permiso para crear sus tablas. Puedes crear un usuario dedicado ejecutando estas sentencias por separado en Query Tool, conectado como administrador:
 
-No crees tablas ni importes respaldos manualmente. Flyway aplica las migraciones al iniciar el servidor. Cada compañero comienza con su propia base vacía; clonar Git no copia contactos ni credenciales.
+```sql
+CREATE ROLE contacto_app LOGIN PASSWORD 'TU_CLAVE_LOCAL';
+```
 
-El script no sobrescribe una base o un usuario existentes sin la configuración local correspondiente. Si encuentra esos nombres, revisa la instalación antes de reutilizarlos; no borres bases sin revisar su contenido.
+```sql
+CREATE DATABASE contacto_proveedores OWNER contacto_app;
+```
+
+Sustituye la contraseña del ejemplo por una tuya. Si el usuario o la base ya existen, usa sus credenciales; no vuelvas a crearlos ni borres datos.
+
+Después, desde la raíz del proyecto:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Abre `.env` y completa la URL, usuario y contraseña reales de **tu propia instalación**. La plantilla pública contiene solamente valores de ejemplo. No cambies la contraseña únicamente en el archivo si el usuario PostgreSQL tiene otra contraseña: deben coincidir.
+
+El formato es `CLAVE=valor`, sin `export`, comillas ni comentarios al final de la línea. Spring Boot lee este archivo como Java Properties. Para una contraseña con barra invertida, escríbela escapada como `\\`; los valores con saltos de línea no forman parte del formato de la plantilla.
+
+No crees tablas ni importes respaldos: Flyway aplica las migraciones al iniciar. Clonar el proyecto no copia los proveedores de otra PC.
 
 ### 4. Iniciar Spring Boot
+
+Desde la raíz del proyecto, con un JDK compatible configurado, puedes iniciar **sin nuestros scripts**:
+
+```powershell
+.\gradlew.bat -p backend run
+```
+
+Gradle ejecuta el backend con la raíz como directorio de trabajo y Spring Boot carga `.env` directamente. No hay que exportar sus variables manualmente. Si prefieres ejecutar la clase principal desde un IDE, usa la raíz `contacto` como directorio de trabajo; también puedes indicar una ruta explícita con la variable `CONTACTO_ENV_FILE`.
+
+Como alternativa cómoda en Windows:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\Iniciar-Backend.ps1
 ```
 
-Espera **`Tomcat started on port 8080`** y **`Started ProveedoresApplication`**. La primera ejecución descarga dependencias.
+Ese script prepara Java y la ruta temporal corta que algunas instalaciones de Windows necesitan. No lee ni descifra credenciales: Spring Boot carga `.env`. Si el inicio directo falla por `JAVA_HOME` o sockets/rutas temporales, usa este acceso o ajusta tu entorno Java.
 
-Mantén abierta la terminal; `Ctrl+C` detiene el servidor. Este comando inicia Spring Boot, no PostgreSQL ni Android.
+Espera **`Tomcat started on port 8080`** y **`Started ProveedoresApplication`**. La primera ejecución descarga dependencias. Mantén la terminal abierta; `Ctrl+C` detiene el servidor. No inicia PostgreSQL ni Android.
 
 Comprueba en el navegador de la PC:
 
@@ -100,7 +130,7 @@ Comprueba en el navegador de la PC:
 http://localhost:8080/api/proveedores
 ```
 
-Una instalación sin registros devuelve `[]`.
+Una base sin registros devuelve `[]`.
 
 ### 5. Ejecutar Android
 
@@ -121,23 +151,30 @@ No recrees la base ni ejecutes dos servidores en el puerto 8080. Al actualizar d
 
 ## ¿Dónde están las credenciales?
 
-La instalación automatizada las guarda en:
-
 ```text
-<carpeta-del-proyecto>/.local/db-credential.xml
-Ejemplo: C:\Android\contacto\.local\db-credential.xml
+C:\Android\contacto\.env
 ```
 
-- Es una credencial cifrada con **Windows DPAPI**, vinculada al usuario y equipo que la creó; no es un archivo de texto con contraseña legible.
-- `.local/` está excluida por `.gitignore`. **Nunca subas este archivo a GitHub.**
-- La lectura se centraliza en `scripts/common/Credenciales-Postgres.ps1`.
-- El script de inicio pasa la contraseña mediante `DB_PASSWORD` y restaura las variables al terminar.
-- `application.properties` contiene `${DB_PASSWORD}`, no una contraseña real.
-- `DB_USER` también se recibe por variable de entorno; el script lo obtiene de la credencial cifrada. `DB_URL` permite cambiar la conexión y tiene una dirección local predeterminada sin secretos.
-- Android solo conoce la URL de la API; no recibe credenciales PostgreSQL.
-- Cada compañero debe ejecutar la preparación en su máquina. No copies credenciales cifradas de otro usuario/equipo.
+- `.env` contiene tu configuración local y está excluido de Git. La contraseña está como texto: no compartas ni publiques ese archivo.
+- `.env.example` sí se publica: sirve de plantilla y no contiene credenciales reales.
+- Spring Boot importa `.env` directamente mediante `spring.config.import`; no depende de PowerShell para leerlo.
+- `application.properties` utiliza `DB_URL`, `DB_USER` y `DB_PASSWORD`. Las variables de entorno del sistema pueden prevalecer sobre el archivo: revisa valores anteriores si la conexión no coincide con `.env`.
+- Android solo conoce la URL de la API; no recibe la contraseña de PostgreSQL.
+- Cada compañero usa su propio `.env` y su propia base.
+- El XML cifrado de versiones anteriores dejó de utilizarse. En el equipo original se conserva en `.local/` únicamente como respaldo local; no hace falta copiarlo a otras máquinas.
 
-Para una base administrada manualmente, configura `DB_URL`, `DB_USER`, `DB_PASSWORD` y ejecuta `.\gradlew.bat -p backend run`. En Linux/macOS prepara la base y las variables manualmente y usa `./gradlew -p backend run`; los scripts automáticos son para Windows.
+En Linux/macOS configura PostgreSQL, crea tu `.env` desde la plantilla y ejecuta `./gradlew -p backend run` desde la raíz. Los scripts de Windows son opcionales.
+
+## ¿Son obligatorios los scripts?
+
+| Script | ¿Obligatorio? | Alternativa |
+|---|---|---|
+| `Preparar-Postgres.ps1` | No. Automatiza la primera preparación en Windows. | Crear usuario/base con pgAdmin y completar `.env`. |
+| `Iniciar-Backend.ps1` | No. Prepara Java y ejecuta el servidor. | `gradlew.bat -p backend run` o ejecutar la clase principal desde el IDE, con el entorno y directorio de trabajo correctos. |
+| `Verificar.ps1` | No para usar la app. Agrupa compilación, lint y pruebas. | Ejecutar las tareas Gradle individualmente. |
+| `common/Entorno-Java.ps1` | Funciones internas de los scripts anteriores. | No se ejecuta directamente ni hace falta para Spring Boot. |
+
+Lo necesario es que estén funcionando PostgreSQL y el backend. La manera de iniciarlos puede ser manual, desde el IDE o mediante los scripts.
 
 ## Teléfono físico
 
@@ -193,7 +230,7 @@ scripts/
   Preparar-Postgres.ps1               Preparación local
   Iniciar-Backend.ps1                 Inicio del servidor
   Verificar.ps1                      Verificaciones
-  common/                            Java y lectura de credenciales compartidos
+  common/                            Preparación de Java compartida por los scripts
 ```
 
 El ViewModel depende del contrato del dominio, no del cliente HTTP. Las entidades Java no importan DTO; el mapper hace esa conversión. Los componentes no ejecutan SQL ni peticiones de red. Las funciones privadas relacionadas con una misma responsabilidad permanecen juntas; no se crean capas vacías ni un archivo por cada método trivial.
@@ -255,7 +292,7 @@ La prueba de interfaz registra su propia empresa con prefijo `Proveedor CRM UI`,
 | Registrar deshabilitado | Inicia el backend, concede permiso de red local y actualiza el panel. Se requiere una carga inicial correcta. |
 | API no responde | Revisa terminal de Spring Boot y servicio PostgreSQL. |
 | Contraseña rechazada | Usa la contraseña de `postgres` elegida en esta PC, no la de Windows. |
-| Credencial no se puede descifrar | Solo funciona en el usuario y equipo que la creó; prepara las credenciales propias. |
+| Fallo de autenticación PostgreSQL | Revisa usuario/contraseña en `.env` y confirma que coincidan con PostgreSQL. El archivo XML anterior ya no se utiliza. |
 | Puerto 8080 ocupado | No inicies dos instancias del backend. |
 | SDK/Gradle incompatible | Android Studio compatible con AGP 9.4.1, API 37 y JDK configurado. |
 | Emulador `offline` o `Device is already activating` | No pulses Run repetidamente. Detén el dispositivo y usa **Cold Boot** en Device Manager. |

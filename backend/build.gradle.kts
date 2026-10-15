@@ -1,6 +1,8 @@
 plugins { java; application }
 repositories { mavenCentral() }
 application { mainClass.set("com.example.proveedores.ProveedoresApplication") }
+// Unifica el directorio de trabajo para leer el .env de la raiz, con o sin scripts.
+tasks.named<JavaExec>("run") { workingDir(rootProject.projectDir.parentFile) }
 java { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
 dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:3.5.7"))
