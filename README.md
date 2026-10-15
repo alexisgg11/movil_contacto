@@ -262,7 +262,7 @@ En esta tabla, la base de todas las rutas es **`app/src/main/java/com/example/co
 | `viewmodel/ProveedoresState.kt` | Datos actuales de pantalla: formulario, lista, errores, filtros, página y modales. `resultados` filtra y ordena; `proveedoresPagina` recorta la página. Cambiar `tamanioPagina` para ajustar los 5 registros actuales. |
 | `viewmodel/AccionesProveedores.kt` | Agrupa callbacks de la pantalla. Añadir aquí una acción que la UI necesite comunicar al ViewModel y conectarla en `ProveedoresApp.kt`. |
 | `viewmodel/MensajeModal.kt` | Modelo del título y contenido de mensajes; el diseño del diálogo vive en `ModalResultado.kt`. |
-| `domain/model/Proveedor.kt` | Modelo de datos móvil y `normalizado()` para recortar espacios. No guarda directamente en la base. |
+| `domain/model/Proveedor.kt` | Modelo de datos móvil, marcado `@Serializable` para generar su conversión JSON automáticamente, y `normalizado()` para recortar espacios. No guarda directamente en la base. |
 | `domain/model/Campo.kt` | Campos del formulario, etiquetas y longitudes máximas. |
 | `domain/model/CamposProveedor.kt` | `valor()` y `actualizar()`: acceso al dato correspondiente a cada `Campo`. |
 | `domain/model/RubroProveedor.kt` | Catálogo de opciones del selector de rubros. El servidor actualmente acepta rubro como texto; este catálogo no es una restricción de PostgreSQL. |
@@ -271,9 +271,9 @@ En esta tabla, la base de todas las rutas es **`app/src/main/java/com/example/co
 | `domain/validation/NormalizarEmpresa.kt` | `clave()`: normaliza empresa para comparar duplicados. Mantenerla coherente con la normalización del backend. |
 | `domain/repository/ProveedorRepository.kt` | Interfaz de operaciones `listar()`, `agregar()`, `actualizar()` y `cambiarEstado()`; no contiene HTTP. |
 | `domain/repository/ErrorProveedor.kt` | Error de operación con mensaje y código HTTP opcional. |
-| `data/repository/ApiProveedorRepository.kt` | Implementación móvil: elige métodos y rutas HTTP para cada operación. |
+| `data/repository/ApiProveedorRepository.kt` | Implementación móvil: elige métodos y rutas HTTP para cada operación y utiliza la conversión automática de Kotlin Serialization. |
 | `data/remote/ClienteHttp.kt` | `solicitar()`: conexión, tiempos de espera, cabeceras, envío y lectura. Usa `Dispatchers.IO` para no bloquear la interfaz. |
-| `data/remote/ProveedorJson.kt` | Convierte entre JSON y el modelo móvil. Actualizarlo si cambia el contrato de datos de la API. |
+| `data/remote/dto/GuardarProveedorRequest.kt` | Datos editables enviados al registrar/editar; excluye ID y estado, controlados por el servidor. Es un DTO `@Serializable`, no un conversor escrito a mano. |
 
 ### Android: dónde cambiar cada parte visual
 
@@ -366,7 +366,7 @@ El esquema está en **`backend/src/main/resources/db/migration/`**: `V1__crear_p
 1. `ModalProveedor` recibe el clic de Guardar y llama al callback recibido.
 2. `AccionesProveedores`, conectado en `ProveedoresApp`, dirige la acción a `ProveedoresViewModel.guardar()`.
 3. El ViewModel normaliza, llama a `ValidarProveedor.errores()` y revisa duplicados en los datos cargados. Si falla, actualiza errores y mensaje del modal.
-4. Si es válido, utiliza `ProveedorRepository.agregar()` o `actualizar()`. La implementación `ApiProveedorRepository` serializa con `ProveedorJson` y utiliza `ClienteHttp`.
+4. Si es válido, utiliza `ProveedorRepository.agregar()` o `actualizar()`. La implementación `ApiProveedorRepository` convierte el DTO con Kotlin Serialization y utiliza `ClienteHttp`.
 5. `ProveedorController` recibe JSON, valida `ProveedorRequest` y llama a `ProveedorService`. El servidor vuelve a comprobar reglas: no confía únicamente en Android.
 6. El servicio usa el mapper y el repositorio JPA; PostgreSQL guarda el registro dentro de una transacción y aplica su restricción de unicidad.
 7. La respuesta vuelve por el mismo camino. El ViewModel actualiza su lista con el resultado confirmado, cierra el formulario y muestra éxito; Compose vuelve a dibujar a partir del estado. Ante un error, se muestra el mensaje correspondiente.
@@ -384,7 +384,7 @@ Para cambiar únicamente el diseño de Guardar, editar el modal; para cambiar qu
 | Cambiar número de filas o su orden | `viewmodel/ProveedoresState.kt`; para apariencia de controles, `ui/components/PaginacionProveedores.kt`. |
 | Cambiar cuándo aparece “Proveedor no encontrado” | `viewmodel/ProveedoresViewModel.kt`, método `buscarConfirmado()`; para el estado vacío en pantalla, `EstadoDirectorio.kt`. |
 | Cambiar reglas del teléfono | `domain/validation/ValidarProveedor.kt`, límites en `domain/model/Campo.kt` y validaciones de `dto/ProveedorRequest.java` en el backend. |
-| Añadir un campo persistente, por ejemplo RUC | Nueva migración SQL + entidad Java + DTO de entrada/salida + mapper; después modelo Kotlin + `Campo`/`CamposProveedor` + validaciones + JSON + formulario y detalle. Actualizar contratos y pruebas en ambos lados. |
+| Añadir un campo persistente, por ejemplo RUC | Nueva migración SQL + entidad Java + DTO de entrada/salida + mapper; después modelo Kotlin + DTO `GuardarProveedorRequest` + `Campo`/`CamposProveedor` + validaciones + formulario y detalle. La biblioteca genera la conversión JSON. Actualizar contratos y pruebas en ambos lados. |
 | Añadir una operación de negocio | Servicio/controlador/repositorio Java según corresponda; contrato de repositorio móvil, implementación HTTP, ViewModel, callback y componente que la activa. |
 
 ### Dónde están las pruebas
@@ -393,6 +393,7 @@ Para cambiar únicamente el diseño de Guardar, editar el modal; para cambiar qu
 |---|---|
 | `app/src/test/java/com/example/contactoproveedores/ValidarProveedorTest.kt` | Reglas del formulario. |
 | `app/src/test/java/com/example/contactoproveedores/PaginacionStateTest.kt` | Filtrado, orden y distribución por páginas en el estado. |
+| `app/src/test/java/com/example/contactoproveedores/SerializacionProveedorTest.kt` | Contrato JSON: campos editables, tildes/comillas, lista, estado y mensaje de error. |
 | `app/src/androidTest/java/com/example/contactoproveedores/ProveedorFlujoTest.kt` | Flujo de registro/edición/estado y búsqueda en emulador con API activa. |
 | `app/src/androidTest/java/com/example/contactoproveedores/PanelAdaptativoTest.kt` | Menú y presentación de tabla en ancho suficiente. |
 | `app/src/androidTest/java/com/example/contactoproveedores/TarjetaProveedorTest.kt` | Expansión y acciones de tarjeta. |
@@ -401,6 +402,14 @@ Para cambiar únicamente el diseño de Guardar, editar el modal; para cambiar qu
 | `backend/src/test/java/com/example/proveedores/ProveedorApiTest.java` | API, validación, duplicados, edición y estado con base H2 aislada. |
 
 Al cambiar reglas, contratos o comportamiento, actualizar las pruebas correspondientes. Mantener las consultas y credenciales en el backend, la lógica de interacción en el ViewModel y los componentes dedicados a presentar datos y emitir acciones.
+
+### Conversión JSON automática
+
+En Android se utiliza [Kotlin Serialization](https://kotlinlang.org/docs/serialization.html), con biblioteca JSON **1.9.0** y plugin de compilación alineado con Kotlin **2.2.10**. `@Serializable` hace que el compilador genere el código de conversión; no se escribe un serializador propio. `encodeToString()` transforma objetos en JSON y `decodeFromString()` transforma JSON en objetos o listas. La versión se declara en `gradle/libs.versions.toml` y el plugin/dependencia se activan en los archivos Gradle.
+
+`Proveedor.kt` representa el registro leído. `GuardarProveedorRequest.kt` expresa los seis campos editables de una petición: ese DTO evita enviar ID o estado al guardar datos. La construcción del DTO selecciona datos, pero no escribe JSON campo por campo. Los cambios de estado envían un mapa booleano convertido por la misma biblioteca. El repositorio tolera campos adicionales en las respuestas mediante `ignoreUnknownKeys`; las validaciones del formulario y del servidor siguen siendo necesarias.
+
+El antiguo `ProveedorJson.kt` se eliminó. En Java, Spring Boot Web usa Jackson para convertir automáticamente las peticiones y respuestas del controlador. Android y el backend utilizan bibliotecas distintas y comparten el mismo contrato HTTP/JSON.
 
 ## API
 

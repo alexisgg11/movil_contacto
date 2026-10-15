@@ -1,5 +1,8 @@
 package com.example.contactoproveedores.domain.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Proveedor(
     val id: Long = 0,
     val empresa: String = "",

@@ -3,7 +3,7 @@ package com.example.contactoproveedores.data.remote
 import com.example.contactoproveedores.domain.repository.ErrorProveedor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
+import kotlinx.serialization.json.Json
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -24,7 +24,9 @@ class ClienteHttp(private val baseUrl: String) {
                 val codigo = conexion.responseCode
                 if (codigo !in 200..299) {
                     val detalle = conexion.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
-                    val mensaje = runCatching { JSONObject(detalle ?: "{}").optString("message") }.getOrNull()
+                    val mensaje = runCatching {
+                        Json.decodeFromString<Map<String, String>>(detalle ?: "{}")["message"]
+                    }.getOrNull()
                     throw ErrorProveedor(mensaje?.takeIf { it.isNotBlank() }
                         ?: "El servidor respondió con error $codigo", codigo)
                 }
