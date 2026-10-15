@@ -8,7 +8,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ProveedorRepository extends JpaRepository<Proveedor, Long> {
-    boolean existsByEmpresaClaveAndIdNot(String empresaClave, Long id);
+    @Query(value = """
+        select count(*) > 0 from proveedores
+        where lower(regexp_replace(trim(empresa), '\\s+', ' ', 'g')) = :empresa
+          and id <> :id
+        """, nativeQuery = true)
+    boolean existeEmpresaNormalizada(@Param("empresa") String empresa, @Param("id") Long id);
 
     @Query("""
         select p from Proveedor p

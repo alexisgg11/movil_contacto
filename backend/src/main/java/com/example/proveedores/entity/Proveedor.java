@@ -1,6 +1,5 @@
 package com.example.proveedores.entity;
 
-import com.example.proveedores.validation.NormalizarEmpresa;
 import jakarta.persistence.*;
 
 @Entity
@@ -9,8 +8,6 @@ public class Proveedor {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(nullable = false, length = 120) private String empresa;
-    @Column(name = "empresa_clave", nullable = false, length = 120, unique = true)
-    private String empresaClave;
     @Column(nullable = false, length = 120) private String contacto;
     @Column(nullable = false, length = 20) private String telefono;
     @Column(nullable = false, length = 160) private String correo;
@@ -26,7 +23,6 @@ public class Proveedor {
     public void actualizar(String empresa, String contacto, String telefono, String correo,
                            String direccion, String rubro) {
         this.empresa = empresa;
-        this.empresaClave = NormalizarEmpresa.clave(empresa);
         this.contacto = contacto;
         this.telefono = telefono;
         this.correo = correo;

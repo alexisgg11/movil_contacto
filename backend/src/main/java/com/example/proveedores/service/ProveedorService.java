@@ -51,7 +51,7 @@ public class ProveedorService {
         return repository.findById(id).orElseThrow(ProveedorNoEncontradoException::new);
     }
     private void comprobarDuplicado(String empresa, Long id) {
-        if (repository.existsByEmpresaClaveAndIdNot(NormalizarEmpresa.clave(empresa), id))
+        if (repository.existeEmpresaNormalizada(NormalizarEmpresa.clave(empresa), id))
             throw new ProveedorDuplicadoException();
     }
 }

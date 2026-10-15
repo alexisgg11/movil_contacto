@@ -225,7 +225,7 @@ backend/src/main/java/com/example/proveedores/
   exception/                         Errores de negocio y traducción HTTP
 backend/src/main/resources/
   application.properties             Configuración por variables de entorno
-  db/migration/                      V1 tabla, V2 unicidad, V3 estado y clave normalizada
+  db/migration/                      Historial SQL: tabla, unicidad, estado y retiro de columna auxiliar
 scripts/
   Preparar-Postgres.ps1               Preparación local
   Iniciar-Backend.ps1                 Inicio del servidor
@@ -316,7 +316,7 @@ La base de estas rutas es **`backend/src/main/java/com/example/proveedores/`**.
 | `ProveedoresApplication.java` | `main()` inicia Spring Boot. No añadir reglas de negocio aquí. |
 | `controller/ProveedorController.java` | Rutas y métodos GET/POST/PUT/DELETE, recepción de DTO con `@Valid` y códigos de respuesta. Delega en el servicio. |
 | `service/ProveedorService.java` | Reglas y transacciones: `listar()`, `obtener()`, `agregar()`, `actualizar()` y `cambiarEstado()`. `encontrar()` resuelve ausencia y `comprobarDuplicado()` comprueba empresa única excluyendo el propio ID. |
-| `repository/ProveedorRepository.java` | Consultas JPA: `buscar()` y `existsByEmpresaClaveAndIdNot()`, además de las operaciones heredadas de `JpaRepository`. No contiene elementos de interfaz. |
+| `repository/ProveedorRepository.java` | Búsqueda JPA `buscar()` y consulta SQL `existeEmpresaNormalizada()`, que compara la empresa sin una columna auxiliar, además de operaciones heredadas de `JpaRepository`. No contiene elementos de interfaz. |
 | `entity/Proveedor.java` | Entidad, columnas y estado persistente. `actualizar()` modifica datos y `cambiarEstado()` modifica el estado. Cambiar una columna requiere también una migración SQL. |
 | `dto/ProveedorRequest.java` | Datos de registro/edición, limpieza de entrada y validaciones del servidor mediante anotaciones. |
 | `dto/ProveedorResponse.java` | Campos devueltos al cliente. No exponer información interna o credenciales aquí. |
@@ -327,7 +327,7 @@ La base de estas rutas es **`backend/src/main/java/com/example/proveedores/`**.
 | `exception/ProveedorNoEncontradoException.java` | Error de negocio cuando no existe un ID. |
 | `exception/ApiExceptionHandler.java` | Convierte errores de validación, duplicidad, ausencia, integridad y JSON inválido en respuestas HTTP con mensaje. |
 
-El esquema está en **`backend/src/main/resources/db/migration/`**: `V1__crear_proveedores.sql`, `V2__empresa_unica.sql` y `V3__estado_y_clave_empresa.sql`. Para cambiar una base que ya ha ejecutado esas versiones, añadir una **nueva migración V4, V5, etc.**; no editar migraciones aplicadas, porque Flyway verifica su historial.
+El esquema está en **`backend/src/main/resources/db/migration/`**: `V1__crear_proveedores.sql`, `V2__empresa_unica.sql`, `V3__estado_y_clave_empresa.sql` y `V4__quitar_empresa_clave.sql`. Para cambiar una base que ya ha ejecutado esas versiones, añadir una **nueva migración V5, V6, etc.**; no editar migraciones aplicadas, porque Flyway verifica su historial.
 
 ### Configuración, dependencias y scripts
 
@@ -441,7 +441,7 @@ La búsqueda, los filtros y la paginación Android operan sobre la lista cargada
 
 ## Migraciones y datos existentes
 
-Flyway conserva el esquema versionado. V3 marca como activos los registros anteriores y añade una clave de empresa normalizada indexada para comprobar duplicados sin cargar toda la tabla. PostgreSQL impide duplicados incluso con solicitudes simultáneas.
+Flyway conserva el esquema versionado. V3 añadió el estado y una columna auxiliar `empresa_clave`; V4 elimina esa columna y su índice auxiliar. La entidad actual solo guarda el nombre original en `empresa`. La consulta de duplicados normaliza ese nombre directamente y el índice único de expresión de V2 sigue impidiendo duplicados incluso con solicitudes simultáneas, sin cargar toda la tabla. V3 se conserva como historial, no debe borrarse ni editarse.
 
 Si una instalación anterior contiene duplicados, revisa esos datos antes de actualizar; las migraciones no borran ni fusionan registros automáticamente. `ddl-auto=validate` verifica el esquema y no recrea la base al iniciar.
 
