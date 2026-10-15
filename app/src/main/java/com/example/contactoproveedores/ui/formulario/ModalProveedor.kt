@@ -32,8 +32,12 @@ fun ModalProveedor(state: ProveedoresState, editar: (Campo, String) -> Unit, gua
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Campo.entries.forEach { campo ->
-                        CampoFormularioProveedor(campo, state.formulario.valor(campo), state.errores[campo],
-                            state.ocupado) { editar(campo, it) }
+                        if (campo == Campo.RUBRO) {
+                            SelectorRubroProveedor(state.formulario.rubro, state.errores[campo], state.ocupado) { editar(campo, it) }
+                        } else {
+                            CampoFormularioProveedor(campo, state.formulario.valor(campo), state.errores[campo],
+                                state.ocupado) { editar(campo, it) }
+                        }
                     }
                 }
                 if (state.ocupado) LinearProgressIndicator(Modifier.fillMaxWidth())

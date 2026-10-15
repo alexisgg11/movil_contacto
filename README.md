@@ -6,8 +6,8 @@ Proyecto del curso **Tecnología y Desarrollo Móvil**. Aplicación Android nati
 
 - Menú con **Resumen** y **Proveedores**.
 - Panel con total de proveedores, activos e inactivos.
-- Registro y edición en un modal con seis campos: empresa, contacto, teléfono, correo, dirección y rubro.
-- Búsqueda y filtros por estado.
+- Registro y edición en un modal con seis campos: empresa, contacto, teléfono, correo, dirección y rubro. Rubro es un selector con opciones; si un registro antiguo tiene otro rubro, se conserva como opción actual.
+- Búsqueda con icono de lupa junto al campo, filtros por estado y páginas de 5 registros ordenadas por código ascendente.
 - Filas compactas con detalle expandible en celular; tabla desde 840 dp de ancho disponible.
 - Desactivación y reactivación con confirmación. **No se borran los registros desde la API ni desde Android.**
 - Validaciones de campos obligatorios, longitudes, teléfono y correo.
@@ -261,13 +261,27 @@ POST y PUT de datos reciben:
 
 Los textos obligatorios requieren al menos 2 caracteres; los máximos están definidos en el modelo Android y DTO Java. El teléfono admite de 7 a 15 dígitos, con prefijo `+`, espacios, guiones y paréntesis (máximo 20 caracteres). El correo se verifica por formato, no por existencia real.
 
-La búsqueda y los filtros Android operan sobre la lista cargada. En la API la búsqueda se ejecuta en la consulta de base de datos. Para directorios grandes, el siguiente paso es paginación y consultas remotas desde Android; actualmente la lista completa se descarga.
+La búsqueda, los filtros y la paginación Android operan sobre la lista cargada. El panel muestra 5 proveedores por página, ordenados por código ascendente; buscar o cambiar el filtro vuelve a la primera página. Registrar abre la página donde quedó el nuevo proveedor. En la API la búsqueda se ejecuta en la base de datos. Para directorios grandes, el siguiente paso es paginación del servidor y consultas remotas: actualmente Android descarga la lista completa.
 
 ## Migraciones y datos existentes
 
 Flyway conserva el esquema versionado. V3 marca como activos los registros anteriores y añade una clave de empresa normalizada indexada para comprobar duplicados sin cargar toda la tabla. PostgreSQL impide duplicados incluso con solicitudes simultáneas.
 
 Si una instalación anterior contiene duplicados, revisa esos datos antes de actualizar; las migraciones no borran ni fusionan registros automáticamente. `ddl-auto=validate` verifica el esquema y no recrea la base al iniciar.
+
+## Datos de demostración y códigos
+
+Con el backend encendido, puedes cargar diez proveedores **ficticios**:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Cargar-Demo.ps1
+```
+
+El archivo `scripts/datos/proveedores-demo.json` contiene los ejemplos, identificados por `(demo)`, con correos de ejemplo y teléfonos ficticios. El script omite empresas que ya existen; no modifica registros anteriores ni reinicia identificadores. Incluye dos proveedores inactivos para comprobar los filtros.
+
+En una base vacía resultan 10 registros y dos páginas. En el equipo original se conservó el proveedor existente como primer registro y se añadieron diez ejemplos: **11 registros y tres páginas (5 + 5 + 1)**.
+
+Los códigos se derivan de la clave persistente de PostgreSQL y no se renumeran al buscar, filtrar o desactivar. El reinicio puntual de la base local para la demostración no forma parte del arranque ni de las migraciones automáticas. Los saltos en identificadores pueden aparecer por pruebas o transacciones y no son un error de conteo.
 
 ## Verificaciones
 

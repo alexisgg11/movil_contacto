@@ -37,7 +37,12 @@ class ProveedorFlujoTest {
             "Teléfono" to "987654321", "Correo electrónico" to "ana@andina.pe",
             "Dirección" to "Av. Primavera 120, Lima", "Rubro" to "Suministros")
         campos.forEach { (etiqueta, texto) ->
-            compose.onNode(hasSetTextAction() and hasText(etiqueta)).performScrollTo().performTextInput(texto)
+            if (etiqueta == "Rubro") {
+                compose.onNodeWithText("Rubro").performScrollTo().performClick()
+                compose.onNodeWithText(texto).performClick()
+            } else {
+                compose.onNode(hasSetTextAction() and hasText(etiqueta)).performScrollTo().performTextInput(texto)
+            }
         }
         compose.onNodeWithText("Guardar").performClick()
         aceptar("Registro exitoso")
@@ -67,7 +72,7 @@ class ProveedorFlujoTest {
         aceptar("Estado actualizado")
         compose.onNode(hasSetTextAction() and hasText("Buscar proveedores")).performScrollTo().performTextReplacement("Sin coincidencias " + empresa)
         androidx.test.espresso.Espresso.closeSoftKeyboard()
-        compose.onNodeWithText("Buscar", substring = false).performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Buscar proveedores").performScrollTo().performClick()
         aceptar("Proveedor no encontrado")
     }
 }

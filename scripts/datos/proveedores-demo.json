@@ -1,0 +1,12 @@
+[
+  {"empresa":"Suministros Andinos (demo)","contacto":"Contacto Demo 01","telefono":"000000001","correo":"andes@example.com","direccion":"Dirección de demostración 01, Lima","rubro":"Suministros","activo":true},
+  {"empresa":"Soluciones Digitales (demo)","contacto":"Contacto Demo 02","telefono":"000000002","correo":"digital@example.com","direccion":"Dirección de demostración 02, Lima","rubro":"Tecnología","activo":true},
+  {"empresa":"Alimentos del Valle (demo)","contacto":"Contacto Demo 03","telefono":"000000003","correo":"valle@example.com","direccion":"Dirección de demostración 03, Lima","rubro":"Alimentos y bebidas","activo":true},
+  {"empresa":"Logística del Norte (demo)","contacto":"Contacto Demo 04","telefono":"000000004","correo":"logistica@example.com","direccion":"Dirección de demostración 04, Lima","rubro":"Transporte y logística","activo":true},
+  {"empresa":"Materiales Urbanos (demo)","contacto":"Contacto Demo 05","telefono":"000000005","correo":"materiales@example.com","direccion":"Dirección de demostración 05, Lima","rubro":"Construcción","activo":false},
+  {"empresa":"Insumos Salud (demo)","contacto":"Contacto Demo 06","telefono":"000000006","correo":"salud@example.com","direccion":"Dirección de demostración 06, Lima","rubro":"Salud","activo":true},
+  {"empresa":"Servicios Integrales (demo)","contacto":"Contacto Demo 07","telefono":"000000007","correo":"servicios@example.com","direccion":"Dirección de demostración 07, Lima","rubro":"Servicios","activo":true},
+  {"empresa":"Oficina Moderna (demo)","contacto":"Contacto Demo 08","telefono":"000000008","correo":"oficina@example.com","direccion":"Dirección de demostración 08, Lima","rubro":"Suministros","activo":true},
+  {"empresa":"Equipamiento Regional (demo)","contacto":"Contacto Demo 09","telefono":"000000009","correo":"equipos@example.com","direccion":"Dirección de demostración 09, Lima","rubro":"Otros","activo":false},
+  {"empresa":"Soporte Empresarial (demo)","contacto":"Contacto Demo 10","telefono":"000000010","correo":"soporte@example.com","direccion":"Dirección de demostración 10, Lima","rubro":"Tecnología","activo":true}
+]

@@ -23,7 +23,7 @@ fun ProveedoresApp() {
             ProveedoresScreen(state, AccionesProveedores(
                 model::nuevo, model::abrirEdicion, model::cerrarFormulario, model::editar, model::guardar,
                 model::buscar, model::buscarConfirmado, model::filtrar, model::confirmarEstado,
-                model::cambiarEstado, model::cargar, model::cerrarModal))
+                model::cambiarEstado, model::cargar, model::cerrarModal, model::cambiarPagina))
         }
     }
 }

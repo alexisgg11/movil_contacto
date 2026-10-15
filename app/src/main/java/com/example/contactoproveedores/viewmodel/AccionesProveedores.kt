@@ -14,5 +14,6 @@ data class AccionesProveedores(
     val confirmarEstado: (Proveedor?) -> Unit,
     val cambiarEstado: () -> Unit,
     val recargar: () -> Unit,
-    val cerrarModal: () -> Unit
+    val cerrarModal: () -> Unit,
+    val cambiarPagina: (Int) -> Unit
 )

@@ -31,8 +31,9 @@ class ProveedoresViewModel(private val repository: ProveedorRepository) : ViewMo
     fun editar(campo: Campo, texto: String) { mutable.update {
         it.copy(formulario = it.formulario.actualizar(campo, texto), errores = it.errores - campo)
     } }
-    fun buscar(texto: String) { mutable.update { it.copy(busqueda = texto) } }
-    fun filtrar(filtro: FiltroEstado) { mutable.update { it.copy(filtro = filtro) } }
+    fun buscar(texto: String) { mutable.update { it.copy(busqueda = texto, pagina = 0) } }
+    fun filtrar(filtro: FiltroEstado) { mutable.update { it.copy(filtro = filtro, pagina = 0) } }
+    fun cambiarPagina(pagina: Int) { mutable.update { it.copy(pagina = pagina.coerceIn(0, it.totalPaginas - 1)) } }
     fun cerrarModal() { mutable.update { it.copy(modal = null) } }
     fun confirmarEstado(p: Proveedor?) { if (!state.value.ocupado) mutable.update { it.copy(cambioEstado = p) } }
 
@@ -72,6 +73,9 @@ class ProveedoresViewModel(private val repository: ProveedorRepository) : ViewMo
                 proveedores = if (p.id == 0L) listOf(guardado) + it.proveedores
                     else it.proveedores.map { actual -> if (actual.id == guardado.id) guardado else actual },
                 formulario = Proveedor(), formularioAbierto = false, errores = emptyMap(),
+                pagina = if (p.id == 0L) it.proveedores.size / it.tamanioPagina else it.paginaActual,
+                busqueda = if (p.id == 0L) "" else it.busqueda,
+                filtro = if (p.id == 0L) FiltroEstado.TODOS else it.filtro,
                 aviso = if (p.id == 0L) "Proveedor registrado" else "Proveedor actualizado",
                 modal = MensajeModal(if (p.id == 0L) "Registro exitoso" else "Cambios guardados",
                     "${guardado.empresa} se guardó correctamente.")) }

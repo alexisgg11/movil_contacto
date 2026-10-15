@@ -95,8 +95,12 @@ fun ProveedoresScreen(state: ProveedoresState, acciones: AccionesProveedores) {
                                 state.error, acciones.recargar)
                         }
                         if (tabla && state.resultados.isNotEmpty()) item { CabeceraTablaProveedores() }
-                        items(state.resultados, key = { it.id }) { p ->
+                        items(state.proveedoresPagina, key = { it.id }) { p ->
                             TarjetaProveedor(p, state.ocupado, { acciones.abrirEdicion(p) }, { acciones.confirmarEstado(p) }, tabla)
+                        }
+                        if (state.resultados.isNotEmpty()) item {
+                            PaginacionProveedores(state.paginaActual, state.totalPaginas, state.resultados.size,
+                                state.tamanioPagina, state.ocupado, acciones.cambiarPagina)
                         }
                     }
                     item { Spacer(Modifier.height(12.dp)) }
