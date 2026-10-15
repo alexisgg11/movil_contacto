@@ -453,7 +453,7 @@ Con el backend encendido, puedes cargar diez proveedores **ficticios**:
 powershell -ExecutionPolicy Bypass -File .\scripts\Cargar-Demo.ps1
 ```
 
-El archivo `scripts/datos/proveedores-demo.json` contiene los ejemplos, identificados por `(demo)`, con correos de ejemplo y teléfonos ficticios. El script omite empresas que ya existen; no modifica registros anteriores ni reinicia identificadores. Incluye dos proveedores inactivos para comprobar los filtros.
+El archivo `scripts/datos/proveedores-demo.json` contiene empresas, contactos, teléfonos y direcciones **inventados**, con presentación realista de Lima y Piura. No representan relaciones comerciales ni datos de contacto verificados; cualquier coincidencia es casual. Los nombres visibles no llevan etiquetas “demo” o “demostración”. Los correos usan el dominio de ejemplo `example.com`. El script omite empresas que ya existen (también reconoce el antiguo sufijo `(demo)`); no modifica registros anteriores ni reinicia identificadores. Incluye dos proveedores inactivos para comprobar los filtros.
 
 En una base vacía resultan 10 registros y dos páginas. En el equipo original se conservó el proveedor existente como primer registro y se añadieron diez ejemplos: **11 registros y tres páginas (5 + 5 + 1)**.
 

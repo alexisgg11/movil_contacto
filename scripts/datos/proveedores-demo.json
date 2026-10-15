@@ -1,12 +1,12 @@
 [
-  {"empresa":"Suministros Andinos (demo)","contacto":"Contacto Demo 01","telefono":"000000001","correo":"andes@example.com","direccion":"Dirección de demostración 01, Lima","rubro":"Suministros","activo":true},
-  {"empresa":"Soluciones Digitales (demo)","contacto":"Contacto Demo 02","telefono":"000000002","correo":"digital@example.com","direccion":"Dirección de demostración 02, Lima","rubro":"Tecnología","activo":true},
-  {"empresa":"Alimentos del Valle (demo)","contacto":"Contacto Demo 03","telefono":"000000003","correo":"valle@example.com","direccion":"Dirección de demostración 03, Lima","rubro":"Alimentos y bebidas","activo":true},
-  {"empresa":"Logística del Norte (demo)","contacto":"Contacto Demo 04","telefono":"000000004","correo":"logistica@example.com","direccion":"Dirección de demostración 04, Lima","rubro":"Transporte y logística","activo":true},
-  {"empresa":"Materiales Urbanos (demo)","contacto":"Contacto Demo 05","telefono":"000000005","correo":"materiales@example.com","direccion":"Dirección de demostración 05, Lima","rubro":"Construcción","activo":false},
-  {"empresa":"Insumos Salud (demo)","contacto":"Contacto Demo 06","telefono":"000000006","correo":"salud@example.com","direccion":"Dirección de demostración 06, Lima","rubro":"Salud","activo":true},
-  {"empresa":"Servicios Integrales (demo)","contacto":"Contacto Demo 07","telefono":"000000007","correo":"servicios@example.com","direccion":"Dirección de demostración 07, Lima","rubro":"Servicios","activo":true},
-  {"empresa":"Oficina Moderna (demo)","contacto":"Contacto Demo 08","telefono":"000000008","correo":"oficina@example.com","direccion":"Dirección de demostración 08, Lima","rubro":"Suministros","activo":true},
-  {"empresa":"Equipamiento Regional (demo)","contacto":"Contacto Demo 09","telefono":"000000009","correo":"equipos@example.com","direccion":"Dirección de demostración 09, Lima","rubro":"Otros","activo":false},
-  {"empresa":"Soporte Empresarial (demo)","contacto":"Contacto Demo 10","telefono":"000000010","correo":"soporte@example.com","direccion":"Dirección de demostración 10, Lima","rubro":"Tecnología","activo":true}
+  {"empresa":"Suministros Andinos","contacto":"Mariana Salazar","telefono":"951482630","correo":"ventas.andinos@example.com","direccion":"Av. Los Algarrobos 245, Piura","rubro":"Suministros","activo":true},
+  {"empresa":"Soluciones Digitales","contacto":"Diego Valverde","telefono":"947316825","correo":"diego.digital@example.com","direccion":"Calle Las Acacias 318, Miraflores, Lima","rubro":"Tecnología","activo":true},
+  {"empresa":"Alimentos del Valle","contacto":"Lucía Benavides","telefono":"968245713","correo":"pedidos.valle@example.com","direccion":"Jr. Los Naranjos 156, Castilla, Piura","rubro":"Alimentos y bebidas","activo":true},
+  {"empresa":"Logística del Norte","contacto":"Javier Castañeda","telefono":"973581426","correo":"operaciones.norte@example.com","direccion":"Av. Los Transportistas 720, Sullana, Piura","rubro":"Transporte y logística","activo":true},
+  {"empresa":"Materiales Urbanos","contacto":"Paola Rivas","telefono":"956724138","correo":"paola.materiales@example.com","direccion":"Calle Los Cedros 482, Los Olivos, Lima","rubro":"Construcción","activo":false},
+  {"empresa":"Insumos Salud","contacto":"Andrés Villacorta","telefono":"982613547","correo":"andres.salud@example.com","direccion":"Av. Las Palmeras 630, San Miguel, Lima","rubro":"Salud","activo":true},
+  {"empresa":"Servicios Integrales","contacto":"Valeria Montenegro","telefono":"964738251","correo":"valeria.servicios@example.com","direccion":"Jr. Las Gardenias 208, Veintiséis de Octubre, Piura","rubro":"Servicios","activo":true},
+  {"empresa":"Oficina Moderna","contacto":"Rodrigo Paredes","telefono":"975142683","correo":"ventas.oficina@example.com","direccion":"Calle Los Fresnos 395, San Borja, Lima","rubro":"Suministros","activo":true},
+  {"empresa":"Equipamiento Regional","contacto":"Camila Aranda","telefono":"943857162","correo":"camila.equipos@example.com","direccion":"Av. Los Tallanes 564, Piura","rubro":"Otros","activo":false},
+  {"empresa":"Soporte Empresarial","contacto":"Sebastián Lozano","telefono":"986321475","correo":"soporte.empresarial@example.com","direccion":"Jr. Las Magnolias 127, Santiago de Surco, Lima","rubro":"Tecnología","activo":true}
 ]

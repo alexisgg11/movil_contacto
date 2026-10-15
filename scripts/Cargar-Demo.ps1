@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 $ejemplos = Get-Content (Join-Path $PSScriptRoot 'datos\proveedores-demo.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 $existentes = Invoke-ApiJson -Uri $ApiUrl
 foreach ($ejemplo in $ejemplos) {
-    if ($existentes | Where-Object { $_.empresa -eq $ejemplo.empresa }) {
+    if ($existentes | Where-Object { ($_.empresa -replace ' \(demo\)$', '') -eq $ejemplo.empresa }) {
         Write-Host "Ya existe: $($ejemplo.empresa). No se modifico."
         continue
     }
